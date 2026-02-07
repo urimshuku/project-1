@@ -12,6 +12,8 @@ interface CheckoutRequest {
   donor_name: string;
   amount: number;
   is_anonymous: boolean;
+  success_url?: string;
+  cancel_url?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -35,7 +37,12 @@ Deno.serve(async (req: Request) => {
     const stripe = new Stripe(stripeSecretKey);
 
     const requestData: CheckoutRequest = await req.json();
-    const { category_id, donor_name, amount, is_anonymous } = requestData;
+    const { category_id, donor_name, amount, is_anonymous, success_url, cancel_url } = requestData;
+
+    const origin = req.headers.get("origin") || "";
+    const base = origin.replace(/\/$/, "");
+    const success = success_url || `${base}/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancel = cancel_url || `${base}/`;
 
     if (!category_id || !donor_name || !amount || amount <= 0) {
       return new Response(
@@ -68,8 +75,8 @@ Deno.serve(async (req: Request) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/`,
+      success_url: success,
+      cancel_url: cancel,
       metadata: {
         category_id,
         donor_name: is_anonymous ? "Anonymous" : donor_name,
@@ -77,10 +84,16 @@ Deno.serve(async (req: Request) => {
       },
     });
 
+    const checkoutUrl = session.url;
+    if (!checkoutUrl) {
+      throw new Error("Stripe did not return a checkout URL");
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         sessionId: session.id,
+        checkoutUrl,
         clientSecret: session.client_secret,
       }),
       {

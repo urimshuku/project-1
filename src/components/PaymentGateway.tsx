@@ -32,37 +32,52 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
       return;
     }
 
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert('Checkout is not configured. Please add Supabase URL and anon key in your environment.');
+      return;
+    }
+
     setProcessing(true);
+
+    const baseUrl = `${window.location.origin}${import.meta.env.BASE_URL}`.replace(/\/$/, '');
+    const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/`;
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-donation`,
+        `${supabaseUrl}/functions/v1/process-donation`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
           },
           body: JSON.stringify({
             category_id: category.id,
             donor_name: isAnonymous ? 'Anonymous' : donorName,
             amount: amount,
             is_anonymous: isAnonymous,
+            success_url: successUrl,
+            cancel_url: cancelUrl,
           }),
         }
       );
 
       if (!response.ok) {
+        const errBody = await response.text();
+        console.error('Process donation error:', response.status, errBody);
         throw new Error('Payment failed');
       }
 
       const data = await response.json();
 
-      if (data.sessionId) {
-        window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`;
-      } else {
-        throw new Error('No session ID received');
+      const redirectUrl = data.checkoutUrl;
+      if (!redirectUrl) {
+        throw new Error('No checkout URL received');
       }
+      window.location.href = redirectUrl;
     } catch (error) {
       console.error('Payment error:', error);
       alert('Payment failed. Please try again.');

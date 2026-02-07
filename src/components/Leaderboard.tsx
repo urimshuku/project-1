@@ -17,6 +17,10 @@ export function Leaderboard({ categoryId }: LeaderboardProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     fetchTopDonors();
 
     const channel = supabase
@@ -41,6 +45,7 @@ export function Leaderboard({ categoryId }: LeaderboardProps) {
   }, [categoryId]);
 
   async function fetchTopDonors() {
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from('donations')

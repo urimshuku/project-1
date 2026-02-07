@@ -66,14 +66,28 @@ const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
+function getInitialPage(): Page {
+  if (typeof window === 'undefined') return 'home';
+  const params = new URLSearchParams(window.location.search);
+  const pathname = window.location.pathname;
+  if ((pathname.endsWith('success') || pathname.includes('/success')) && params.get('session_id')) {
+    return 'success';
+  }
+  return 'home';
+}
+
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [selectedTab, setSelectedTab] = useState('General Donations');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     fetchCategories();
 
     const channel = supabase
@@ -105,6 +119,7 @@ function App() {
   }, [currentPage]);
 
   async function fetchCategories() {
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from('categories')
