@@ -34,7 +34,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stripe = new Stripe(stripeSecretKey);
+    const stripe = new Stripe(stripeSecretKey, {
+      timeout: 30000,
+      maxNetworkRetries: 2,
+    });
 
     const requestData: CheckoutRequest = await req.json();
     const { category_id, donor_name, amount, is_anonymous, success_url, cancel_url } = requestData;
@@ -107,10 +110,14 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("Error creating checkout session:", error);
 
+    const rawMessage = error instanceof Error ? error.message : "Internal server error";
+    const isStripeConnection = /connection to Stripe|StripeConnectionError|retried/i.test(rawMessage);
+    const errorMessage = isStripeConnection
+      ? "Stripe connection failed. Check that STRIPE_SECRET_KEY is correct (sk_test_... or sk_live_...) in Supabase Function secrets, then try again."
+      : rawMessage;
+
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error",
-      }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: {
