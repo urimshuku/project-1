@@ -38,6 +38,14 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (currentPage === 'payment') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [currentPage]);
+
   async function fetchCategories() {
     try {
       const { data, error } = await supabase
@@ -71,6 +79,7 @@ function App() {
   const handleDonate = (category: Category) => {
     setSelectedCategory(category);
     setCurrentPage('payment');
+    window.scrollTo(0, 0);
   };
 
   const handlePaymentSuccess = () => {
@@ -81,6 +90,9 @@ function App() {
     setCurrentPage('home');
     setSelectedCategory(null);
   };
+
+  const generalCategory = categories.find((c) => c.name === 'General Donations');
+  const specificCategories = categories.filter((c) => c.name !== 'General Donations');
 
   if (loading) {
     return (
@@ -102,7 +114,7 @@ function App() {
 
   if (currentPage === 'payment' && selectedCategory) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="min-h-screen bg-gray-50 pb-12 overflow-x-hidden">
         <Header selectedTab={selectedTab} onTabChange={handleTabChange} />
         <div className="mt-8 pt-4 px-4">
           <PaymentGateway
@@ -129,77 +141,101 @@ function App() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {categories.map((category) => (
-            <section
-              key={category.id}
-              id={`category-${category.id}`}
-              className={`bg-white rounded-2xl shadow-md p-8 border border-gray-100 flex flex-col gap-6 ${
-                category.name === 'General Donations' ? 'lg:col-span-2' : ''
-              }`}
+        {generalCategory && (
+          <section
+            id={`category-${generalCategory.id}`}
+            className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 flex flex-col gap-6 mb-12"
+          >
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {generalCategory.name}
+              </h2>
+              <p className="text-gray-600">{generalCategory.description}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-2">Total Raised</p>
+              <p className="text-4xl font-bold text-gray-900">
+                €{generalCategory.current_amount.toLocaleString()}
+              </p>
+            </div>
+            <button
+              onClick={() => handleDonate(generalCategory)}
+              className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              style={{ backgroundColor: '#c95b2d' }}
             >
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {category.name}
-                </h2>
-                <p className="text-gray-600">{category.description}</p>
-              </div>
+              Donate Now
+            </button>
+            <div className="mt-2">
+              <Leaderboard categoryId={generalCategory.id} />
+            </div>
+          </section>
+        )}
 
-              {category.name !== 'General Donations' ? (
-                <div>
-                  <div className="flex justify-between items-baseline mb-4">
-                    <span className="text-3xl font-bold text-gray-900">
-                      €{category.current_amount.toLocaleString()}
-                    </span>
-                    <span className="text-lg text-gray-500">
-                      of €{category.target_amount.toLocaleString()} goal
-                    </span>
+        {specificCategories.length > 0 && (
+          <section aria-labelledby="specific-causes-heading">
+            <h2
+              id="specific-causes-heading"
+              className="text-2xl font-bold text-gray-900 mb-6"
+            >
+              Specific Causes
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {specificCategories.map((category) => (
+                <section
+                  key={category.id}
+                  id={`category-${category.id}`}
+                  className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 flex flex-col gap-6"
+                >
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {category.name}
+                    </h3>
+                    <p className="text-gray-600">{category.description}</p>
                   </div>
-
-                  <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          (category.current_amount / category.target_amount) * 100,
-                          100
-                        )}%`,
-                        backgroundColor: '#c95b2d',
-                      }}
-                    />
+                  <div>
+                    <div className="flex justify-between items-baseline mb-4">
+                      <span className="text-3xl font-bold text-gray-900">
+                        €{category.current_amount.toLocaleString()}
+                      </span>
+                      <span className="text-lg text-gray-500">
+                        of €{category.target_amount.toLocaleString()} goal
+                      </span>
+                    </div>
+                    <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            (category.current_amount / category.target_amount) * 100,
+                            100
+                          )}%`,
+                          backgroundColor: '#c95b2d',
+                        }}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-3">
+                      {Math.min(
+                        (category.current_amount / category.target_amount) * 100,
+                        100
+                      ).toFixed(1)}
+                      % funded
+                    </p>
                   </div>
-
-                  <p className="text-sm text-gray-500 mt-3">
-                    {Math.min(
-                      (category.current_amount / category.target_amount) * 100,
-                      100
-                    ).toFixed(1)}
-                    % funded
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Total Raised</p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    €{category.current_amount.toLocaleString()}
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={() => handleDonate(category)}
-                className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-                style={{ backgroundColor: '#c95b2d' }}
-              >
-                Donate Now
-              </button>
-
-              <div className="mt-2">
-                <Leaderboard categoryId={category.id} />
-              </div>
-            </section>
-          ))}
-        </div>
+                  <button
+                    onClick={() => handleDonate(category)}
+                    className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                    style={{ backgroundColor: '#c95b2d' }}
+                  >
+                    Donate Now
+                  </button>
+                  <div className="mt-2">
+                    <Leaderboard categoryId={category.id} />
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

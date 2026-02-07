@@ -77,7 +77,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to {category.name}
+        Back to Home
       </button>
 
       <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
