@@ -73,7 +73,7 @@ export function Leaderboard({ categoryId }: LeaderboardProps) {
       }, [] as TopDonor[]);
 
       aggregated.sort((a, b) => b.total_amount - a.total_amount);
-      setTopDonors(aggregated.slice(0, 5));
+      setTopDonors(aggregated);
     } catch (error) {
       console.error('Error fetching top donors:', error);
     } finally {
@@ -104,7 +104,7 @@ export function Leaderboard({ categoryId }: LeaderboardProps) {
   return (
     <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
       <div className="mb-4">
-        <h4 className="font-semibold text-gray-900">Top Contributors</h4>
+        <h4 className="font-semibold text-gray-900">Donors</h4>
       </div>
 
       <div className="space-y-3">
