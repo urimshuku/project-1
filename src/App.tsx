@@ -328,7 +328,7 @@ function App() {
                     <Leaderboard
                       categoryId={category.id}
                       fallbackDonors={
-                        category.id === 'default-essentials'
+                        category.name === 'Essentials'
                           ? [{ donor_name: 'Anonymous', total_amount: 500, is_anonymous: true }]
                           : undefined
                       }
