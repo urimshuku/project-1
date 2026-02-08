@@ -6,3 +6,10 @@
 html {
   scrollbar-gutter: stable;
 }
+
+/* Slightly smaller base on mobile for a neater look */
+@media (max-width: 767px) {
+  html {
+    font-size: 15px;
+  }
+}

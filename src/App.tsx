@@ -176,6 +176,11 @@ function App() {
     setSelectedCategory(null);
   };
 
+  const handleGoHome = () => {
+    setCurrentPage('home');
+    setSelectedCategory(null);
+  };
+
   // Use DB categories when present, but always merge in any default category that's missing (e.g. Workshop Tables)
   const rawCategories =
     categories.length > 0
@@ -245,8 +250,8 @@ function App() {
   if (currentPage === 'payment' && selectedCategory) {
     return (
       <div className="min-h-screen bg-gray-50 pb-12 overflow-x-hidden">
-        <Header selectedTab={selectedTab} onTabChange={handleTabChange} />
-        <div className="mt-8 pt-4 px-4">
+        <Header selectedTab={selectedTab} onTabChange={handleTabChange} onGoHome={handleGoHome} />
+        <div className="mt-4 sm:mt-6 md:mt-8 pt-2 sm:pt-4 px-3 sm:px-4">
           <PaymentGateway
             category={selectedCategory}
             onBack={() => setCurrentPage('home')}
@@ -259,14 +264,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header selectedTab={selectedTab} onTabChange={handleTabChange} />
+      <Header selectedTab={selectedTab} onTabChange={handleTabChange} onGoHome={handleGoHome} />
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">
+      <div className="max-w-7xl mx-auto px-3 py-6 sm:px-4 sm:py-8 md:py-12">
+        <div className="mb-6 sm:mb-8 md:mb-12 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-8">
             Support Our Studio Space Renovations
           </h1>
-          <div className="text-lg text-gray-600 max-w-3xl mx-auto space-y-4">
+          <div className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto space-y-3 sm:space-y-4">
             <p>
               Studio Space is a small community hub where people gather for connection, creative unfolding, and meaningful dialogue.
             </p>
@@ -289,22 +294,22 @@ function App() {
         </div>
 
         {categories.length === 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-center max-w-2xl mx-auto mb-8">
-            <p className="text-blue-800 text-sm">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-center max-w-2xl mx-auto mb-4 sm:mb-6 md:mb-8">
+            <p className="text-blue-800 text-xs sm:text-sm">
               Showing demo categories. Run <code className="bg-blue-100 px-1 rounded">supabase db push</code> to use your database and save donations.
             </p>
           </div>
         )}
 
         {specificCategories.length > 0 && (
-          <section aria-labelledby="specific-causes-heading" className="mb-12">
+          <section aria-labelledby="specific-causes-heading" className="mb-6 sm:mb-8 md:mb-12">
             <h2
               id="specific-causes-heading"
-              className="text-2xl font-bold text-gray-900 mb-6"
+              className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6"
             >
               Specific Causes
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
               {specificCategories.map((category) => {
                 const isCompleted =
                   category.current_amount >= category.target_amount && category.target_amount > 0;
@@ -312,28 +317,28 @@ function App() {
                 <section
                   key={category.id}
                   id={`category-${category.id}`}
-                  className={`rounded-2xl shadow-md p-8 border border-gray-100 flex flex-col gap-6 ${
+                  className={`rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 flex flex-col gap-4 sm:gap-6 ${
                     isCompleted
                       ? 'bg-gray-100 opacity-75 pointer-events-none'
                       : 'bg-white'
                   }`}
                 >
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">
                       {category.name}
                     </h3>
-                    <p className="text-gray-600">{category.description}</p>
+                    <p className="text-gray-600 text-sm sm:text-base">{category.description}</p>
                   </div>
                   <div>
-                    <div className="flex justify-between items-baseline mb-4">
-                      <span className="text-3xl font-bold text-gray-900">
+                    <div className="flex justify-between items-baseline mb-2 sm:mb-4">
+                      <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                         €{category.current_amount.toLocaleString()}
                       </span>
-                      <span className="text-lg text-gray-500">
+                      <span className="text-sm sm:text-base md:text-lg text-gray-500">
                         of €{category.target_amount.toLocaleString()} goal
                       </span>
                     </div>
-                    <div className="relative w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="relative w-full h-2.5 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className="absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full"
                         style={{
@@ -345,7 +350,7 @@ function App() {
                         }}
                       />
                     </div>
-                    <p className="text-sm text-gray-500 mt-3">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">
                       {category.current_amount >= category.target_amount && category.target_amount > 0 ? (
                         <span className="font-semibold text-green-600">Completed</span>
                       ) : (
@@ -360,7 +365,7 @@ function App() {
                     type="button"
                     disabled={isCompleted}
                     onClick={() => handleDonate(category)}
-                    className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+                    className="w-full text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#c95b2d' }}
                   >
                     Donate Now
@@ -375,23 +380,23 @@ function App() {
         {generalCategory && (
           <section
             id={`category-${generalCategory.id}`}
-            className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 flex flex-col gap-6 mb-12"
+            className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8 md:mb-12"
           >
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
                 {generalCategory.name}
               </h2>
-              <p className="text-gray-600">{generalCategory.description}</p>
+              <p className="text-gray-600 text-sm sm:text-base">{generalCategory.description}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-2">Total Raised</p>
-              <p className="text-4xl font-bold text-gray-900">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Raised</p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
                 €{generalCategory.current_amount.toLocaleString()}
               </p>
             </div>
             <button
               onClick={() => handleDonate(generalCategory)}
-              className="w-full text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl"
               style={{ backgroundColor: '#c95b2d' }}
             >
               Donate Now
@@ -399,7 +404,7 @@ function App() {
           </section>
         )}
 
-        <section className="mt-12">
+        <section className="mt-6 sm:mt-8 md:mt-12">
           <AllDonors />
         </section>
       </div>

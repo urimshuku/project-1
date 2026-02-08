@@ -92,29 +92,29 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-1 sm:px-0">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         Back to Home
       </button>
 
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-100">
+        <div className="mb-5 sm:mb-6 md:mb-8">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Support {category.name}
           </h2>
-          <p className="text-gray-600">{category.description}</p>
+          <p className="text-gray-600 text-sm sm:text-base">{category.description}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
               Select Amount
             </label>
-            <div className="grid grid-cols-4 gap-3 mb-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2 sm:mb-3">
               {PRESET_AMOUNTS.map((preset) => (
                 <button
                   key={preset}
@@ -123,7 +123,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
                     setSelectedAmount(preset);
                     setCustomAmount('');
                   }}
-                  className={`py-4 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                  className={`py-3 sm:py-4 px-2 sm:px-4 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                     selectedAmount === preset
                       ? 'text-white shadow-md scale-105'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -138,7 +138,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               ))}
             </div>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">
+              <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-sm sm:text-base">
                 €
               </span>
               <input
@@ -149,8 +149,8 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
                   setSelectedAmount(null);
                 }}
                 placeholder="Other amount"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all"
-                style={{ '--tw-ring-color': '#c95b2d' } as any}
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all text-base"
+                style={{ '--tw-ring-color': '#c95b2d', fontSize: '16px' } as any}
                 min="1"
                 step="0.01"
               />
@@ -158,7 +158,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
               Your Name
             </label>
             <input
@@ -167,34 +167,35 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               onChange={(e) => setDonorName(e.target.value)}
               disabled={isAnonymous}
               placeholder="Enter your name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 text-base"
+              style={{ fontSize: '16px' }}
             />
-            <label className="flex items-center gap-2 mt-2">
+            <label className="flex items-center gap-2 mt-1.5 sm:mt-2">
               <input
                 type="checkbox"
                 checked={isAnonymous}
                 onChange={(e) => setIsAnonymous(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-600">Donate anonymously</span>
+              <span className="text-xs sm:text-sm text-gray-600">Donate anonymously</span>
             </label>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-            <div className="flex justify-between items-center text-sm mb-1">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
+            <div className="flex justify-between items-center text-xs sm:text-sm mb-1">
               <span className="text-gray-600">Donation Amount:</span>
               <span className="font-semibold text-gray-900">€{amount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-2xl font-bold" style={{ color: '#c95b2d' }}>€{amount.toFixed(2)}</span>
+              <span className="text-base sm:text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-xl sm:text-2xl font-bold" style={{ color: '#c95b2d' }}>€{amount.toFixed(2)}</span>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={processing || amount <= 0}
-            className="w-full text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
               backgroundColor: processing || amount <= 0 ? '#ccc' : '#c95b2d',
             }}
