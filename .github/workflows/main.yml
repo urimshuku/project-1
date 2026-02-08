@@ -31,7 +31,7 @@ jobs:
 
       - name: Build
         env:
-          BASE_PATH: /project-1/
+          BASE_PATH: /studio-space-donations/
           VITE_SUPABASE_URL: https://qqlrhqekqcoivarkzkua.supabase.co
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHJocWVrcWNvaXZhcmt6a3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NDg4ODgsImV4cCI6MjA4NjAyNDg4OH0.TmDlyQ84sUs05ILFKo8l5Gs8ll2fPbW91klNcaanvX4
         run: npm run build
