@@ -130,7 +130,7 @@ export function AllDonors() {
             }}
             role="switch"
             aria-checked={viewMode === 'top'}
-            aria-label="Toggle between by date and top donations"
+            aria-label="Toggle between recent donations and by amount"
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -143,7 +143,7 @@ export function AllDonors() {
               viewMode === 'top' ? 'text-gray-900' : 'text-gray-500'
             }`}
           >
-            Top donations
+            By amount
           </span>
         </div>
         {donationsToShow.length === 0 ? (
