@@ -347,12 +347,12 @@ function App() {
         )}
 
         {specificCategories.length > 0 && (
-          <section aria-labelledby="specific-causes-heading" className="mb-6 sm:mb-8 md:mb-12">
+          <section aria-labelledby="causes-heading" className="mb-6 sm:mb-8 md:mb-12">
             <h2
-              id="specific-causes-heading"
+              id="causes-heading"
               className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6"
             >
-              Specific Causes
+              Causes
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
               {specificCategories.map((category) => {
@@ -476,7 +476,7 @@ function App() {
 
         <footer className="mt-12 sm:mt-16 md:mt-20 pb-8 sm:pb-12 text-center">
           <p
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl max-w-3xl mx-auto"
+            className="text-2xl sm:text-[1.65rem] md:text-[1.65rem] lg:text-[1.65rem] max-w-3xl mx-auto"
             style={{ color: '#c95b2d', fontFamily: "'Reenie Beanie', cursive" }}
           >
             Thank you for being part of making this space continue to exist and grow.
