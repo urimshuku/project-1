@@ -12,6 +12,7 @@ interface CheckoutRequest {
   donor_name: string;
   amount: number;
   is_anonymous: boolean;
+  words_of_support?: string;
   success_url?: string;
   cancel_url?: string;
 }
@@ -40,7 +41,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const requestData: CheckoutRequest = await req.json();
-    const { category_id, donor_name, amount, is_anonymous, success_url, cancel_url } = requestData;
+    const { category_id, donor_name, amount, is_anonymous, words_of_support, success_url, cancel_url } = requestData;
 
     const origin = req.headers.get("origin") || "";
     const base = origin.replace(/\/$/, "");
@@ -84,6 +85,9 @@ Deno.serve(async (req: Request) => {
         category_id,
         donor_name: is_anonymous ? "Anonymous" : donor_name,
         is_anonymous: is_anonymous.toString(),
+        ...(words_of_support && words_of_support.trim().length > 0
+          ? { words_of_support: words_of_support.trim().slice(0, 150) }
+          : {}),
       },
     });
 

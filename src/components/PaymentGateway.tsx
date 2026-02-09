@@ -15,7 +15,10 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
   const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [wordsOfSupport, setWordsOfSupport] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const MAX_WORDS_OF_SUPPORT = 150;
 
   const amount = selectedAmount || parseFloat(customAmount) || 0;
 
@@ -59,6 +62,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
             donor_name: isAnonymous ? 'Anonymous' : donorName,
             amount: amount,
             is_anonymous: isAnonymous,
+            words_of_support: wordsOfSupport.trim().slice(0, MAX_WORDS_OF_SUPPORT) || undefined,
             success_url: successUrl,
             cancel_url: cancelUrl,
           }),
@@ -179,6 +183,24 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               />
               <span className="text-xs sm:text-sm text-gray-600">Donate anonymously</span>
             </label>
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
+              Words of Support <span className="text-gray-500 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={wordsOfSupport}
+              onChange={(e) => setWordsOfSupport(e.target.value.slice(0, MAX_WORDS_OF_SUPPORT))}
+              placeholder="Leave a short message in support of the space"
+              maxLength={MAX_WORDS_OF_SUPPORT}
+              rows={3}
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              style={{ fontSize: '16px' }}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {wordsOfSupport.length}/{MAX_WORDS_OF_SUPPORT} characters
+            </p>
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">

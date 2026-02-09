@@ -43,6 +43,7 @@ export interface Database {
           donor_name: string;
           amount: number;
           is_anonymous: boolean;
+          words_of_support: string | null;
           created_at: string;
         };
         Insert: {
@@ -51,6 +52,7 @@ export interface Database {
           donor_name: string;
           amount: number;
           is_anonymous?: boolean;
+          words_of_support?: string | null;
           created_at?: string;
         };
         Update: {
@@ -59,6 +61,7 @@ export interface Database {
           donor_name?: string;
           amount?: number;
           is_anonymous?: boolean;
+          words_of_support?: string | null;
           created_at?: string;
         };
       };

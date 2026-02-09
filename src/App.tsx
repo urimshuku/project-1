@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { PaymentGateway } from './components/PaymentGateway';
 import { SuccessPage } from './components/SuccessPage';
 import { AllDonors } from './components/AllDonors';
+import { WordsOfSupport } from './components/WordsOfSupport';
 import { ImageCarousel } from './components/ImageCarousel';
 import { supabase } from './lib/supabase';
 import type { Category } from './lib/types';
@@ -472,6 +473,10 @@ function App() {
 
         <section className="mt-10 sm:mt-12 md:mt-16">
           <AllDonors />
+        </section>
+
+        <section className="mt-10 sm:mt-12 md:mt-16">
+          <WordsOfSupport />
         </section>
 
         <footer className="mt-12 sm:mt-16 md:mt-20 pb-8 sm:pb-12 text-center">
