@@ -29,6 +29,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check Supabase secrets
+        run: |
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ] || [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "::error::Missing secrets. In this repo go to Settings → Secrets and variables → Actions and add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (exact names)."
+            exit 1
+          fi
+          echo "Supabase secrets are set."
+
       - name: Build
         env:
           BASE_PATH: /studio-space-donations/
