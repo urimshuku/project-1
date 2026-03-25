@@ -21,3 +21,5 @@ dist-ssr
 *.sln
 *.sw?
 .env
+# Supabase Edge Function secrets — never commit real values
+supabase/.env.secrets

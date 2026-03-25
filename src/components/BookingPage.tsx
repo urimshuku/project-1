@@ -10,19 +10,38 @@ interface BookingPageProps {
   onBackToEntry: () => void;
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+/** Today in local time as YYYY-MM-DD — used so past dates stay disabled as the calendar rolls forward. */
+function todayIsoLocal(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  /** Honeypot — must stay empty (bots often fill hidden fields) */
+  const [websiteHoneypot, setWebsiteHoneypot] = useState('');
   const [activityType, setActivityType] = useState('');
   const [groupSize, setGroupSize] = useState('');
   const [additionalRequests, setAdditionalRequests] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
+
+  const bookingMinDate = todayIsoLocal();
 
   useEffect(() => {
     return () => {
@@ -30,37 +49,125 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /** Drop any selected days that are now in the past (e.g. after midnight or if state was stale). */
+  useEffect(() => {
+    setSelectedDates((prev) => prev.filter((k) => k >= bookingMinDate));
+  }, [bookingMinDate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    // Placeholder: in a real app you would send to an API
-    console.log({
-      selectedDates,
-      name,
-      startTime,
-      endTime,
-      contact,
-      activityType,
-      groupSize: groupSize ? Number(groupSize) : undefined,
-      additionalRequests: additionalRequests || undefined,
-    });
-    setIsSubmitting(true);
-    setIsSuccess(true);
-    setSelectedDates([]);
-    setName('');
-    setStartTime('');
-    setEndTime('');
-    setContact('');
-    setActivityType('');
-    setGroupSize('');
-    setAdditionalRequests('');
 
-    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-    resetTimeoutRef.current = setTimeout(() => {
-      setIsSuccess(false);
+    setSubmitError(null);
+
+    if (selectedDates.length === 0) {
+      setSubmitError('Please select at least one date.');
+      return;
+    }
+    if (selectedDates.some((k) => k < bookingMinDate)) {
+      setSubmitError('Please choose only today or future dates.');
+      return;
+    }
+    if (!startTime.trim() || !endTime.trim()) {
+      setSubmitError('Please enter a start and end time.');
+      return;
+    }
+    if (startTime >= endTime) {
+      setSubmitError('End time must be after start time.');
+      return;
+    }
+    if (!phone.trim()) {
+      setSubmitError('Please enter your phone number.');
+      return;
+    }
+    if (!activityType.trim()) {
+      setSubmitError('Please enter the type of activity.');
+      return;
+    }
+    const size = Number(groupSize);
+    if (!groupSize.trim() || Number.isNaN(size) || size < 1) {
+      setSubmitError('Please enter a valid group size (at least 1).');
+      return;
+    }
+    if (!email.trim()) {
+      setSubmitError('Please enter your email address.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setSubmitError('Please enter a valid email address.');
+      return;
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setSubmitError(
+        'Booking is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, and deploy the book-venue Edge Function.',
+      );
+      return;
+    }
+
+    const sortedDates = [...selectedDates].sort();
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/book-venue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          dates: sortedDates.length === 1 ? sortedDates[0] : sortedDates,
+          startTime: startTime.slice(0, 5),
+          endTime: endTime.slice(0, 5),
+          fullName: name.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+          activityType: activityType.trim(),
+          groupSize: size,
+          notes: additionalRequests.trim() || undefined,
+          website: websiteHoneypot.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const details = data?.details as Record<string, string[]> | undefined;
+        if (details && typeof details === 'object') {
+          const lines = Object.entries(details).flatMap(([key, msgs]) =>
+            (msgs || []).map((m) => `${key}: ${m}`),
+          );
+          setSubmitError(lines.length ? lines.join(' ') : (data?.error as string) || 'Request failed');
+        } else {
+          setSubmitError((data?.error as string) || `Request failed (${res.status})`);
+        }
+        return;
+      }
+
+      setIsSuccess(true);
+      setSelectedDates([]);
+      setName('');
+      setStartTime('');
+      setEndTime('');
+      setPhone('');
+      setEmail('');
+      setWebsiteHoneypot('');
+      setActivityType('');
+      setGroupSize('');
+      setAdditionalRequests('');
+
+      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+      resetTimeoutRef.current = setTimeout(() => {
+        setIsSuccess(false);
+        resetTimeoutRef.current = null;
+      }, SUCCESS_DURATION_MS);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      resetTimeoutRef.current = null;
-    }, SUCCESS_DURATION_MS);
+    }
   };
 
   return (
@@ -99,7 +206,27 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               Choose your date(s), activity, and group size. We’ll get back to you to confirm.
             </p>
 
+            {submitError && (
+              <div
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                role="alert"
+              >
+                {submitError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+            <div className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" aria-hidden="true">
+              <label htmlFor="booking-website-hp">Website</label>
+              <input
+                id="booking-website-hp"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={websiteHoneypot}
+                onChange={(e) => setWebsiteHoneypot(e.target.value)}
+              />
+            </div>
             {/* Date(s) – calendar */}
             <fieldset className="space-y-3">
               <legend className="text-lg font-semibold text-gray-900">
@@ -109,6 +236,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 <BookingCalendar
                   selectedDates={selectedDates}
                   onChange={setSelectedDates}
+                  minDate={bookingMinDate}
                 />
               </div>
               <div className="mt-3 flex flex-col sm:flex-row gap-3 w-full min-w-0 max-w-full">
@@ -155,18 +283,35 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               />
             </div>
 
-            {/* Contact */}
+            {/* Phone */}
             <div>
-              <label htmlFor="booking-contact" className="block text-sm font-medium text-gray-700 mb-1">
-                Contact
+              <label htmlFor="booking-phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone
               </label>
               <input
-                id="booking-contact"
+                id="booking-phone"
                 type="tel"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 placeholder="Phone number"
+              />
+            </div>
+
+            {/* Email — required for confirmation */}
+            <div>
+              <label htmlFor="booking-email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                id="booking-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                placeholder="you@example.com"
               />
             </div>
 
@@ -180,6 +325,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 type="text"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
+                required
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 placeholder="e.g. Book club, Workshop, Film screening"
               />
@@ -194,9 +340,10 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-group-size"
                 type="number"
                 min={1}
-                max={500}
+                max={2000}
                 value={groupSize}
                 onChange={(e) => setGroupSize(e.target.value)}
+                required
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 placeholder="e.g. 8"
               />
@@ -220,7 +367,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
             <div className="flex flex-col items-center justify-center gap-0 pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isSuccess}
                 className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white shadow-md min-w-[140px] min-h-[44px] disabled:cursor-default transition-colors duration-300 ease-out"
                 style={{ backgroundColor: isSuccess ? '#9ca3af' : '#d5a220' }}
               >
