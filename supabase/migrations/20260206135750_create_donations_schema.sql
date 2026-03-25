@@ -1,5 +1,5 @@
 /*
-  # Studio Space Donations Schema
+  # Studio Space Schema
 
   1. New Tables
     - `categories`
