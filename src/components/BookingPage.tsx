@@ -23,6 +23,13 @@ function todayIsoLocal(): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Local instant from YYYY-MM-DD + HH:mm (from `<input type="time">`). */
+function localDateTimeMs(isoDate: string, hhmm: string): number {
+  const [y, mo, day] = isoDate.split('-').map(Number);
+  const [h, min] = hhmm.slice(0, 5).split(':').map(Number);
+  return new Date(y, mo - 1, day, h, min, 0, 0).getTime();
+}
+
 export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [name, setName] = useState('');
@@ -37,6 +44,9 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [additionalRequests, setAdditionalRequests] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  /** True when last successful response was dry-run (nothing saved). */
+  const [isDryRunSuccess, setIsDryRunSuccess] = useState(false);
+  const [testOnlyNoSave, setTestOnlyNoSave] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
@@ -72,9 +82,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
       setSubmitError('Please enter a start and end time.');
       return;
     }
-    if (startTime >= endTime) {
-      setSubmitError('End time must be after start time.');
-      return;
+    const sortedDates = [...selectedDates].sort();
+    if (sortedDates.length === 1) {
+      if (startTime >= endTime) {
+        setSubmitError('End time must be after start time.');
+        return;
+      }
+    } else {
+      const startMs = localDateTimeMs(sortedDates[0], startTime);
+      const endMs = localDateTimeMs(sortedDates[sortedDates.length - 1], endTime);
+      if (endMs <= startMs) {
+        setSubmitError(
+          'End time on the last selected day must be after start time on the first selected day.',
+        );
+        return;
+      }
     }
     if (!phone.trim()) {
       setSubmitError('Please enter your phone number.');
@@ -107,8 +129,6 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
       return;
     }
 
-    const sortedDates = [...selectedDates].sort();
-
     setIsSubmitting(true);
     try {
       const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/book-venue`, {
@@ -128,6 +148,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
           groupSize: size,
           notes: additionalRequests.trim() || undefined,
           website: websiteHoneypot.trim() || undefined,
+          dryRun: testOnlyNoSave,
         }),
       });
 
@@ -146,21 +167,27 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
         return;
       }
 
+      const dryRun = Boolean((data as { dryRun?: boolean }).dryRun);
+      setIsDryRunSuccess(dryRun);
       setIsSuccess(true);
-      setSelectedDates([]);
-      setName('');
-      setStartTime('');
-      setEndTime('');
-      setPhone('');
-      setEmail('');
-      setWebsiteHoneypot('');
-      setActivityType('');
-      setGroupSize('');
-      setAdditionalRequests('');
+
+      if (!dryRun) {
+        setSelectedDates([]);
+        setName('');
+        setStartTime('');
+        setEndTime('');
+        setPhone('');
+        setEmail('');
+        setWebsiteHoneypot('');
+        setActivityType('');
+        setGroupSize('');
+        setAdditionalRequests('');
+      }
 
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
       resetTimeoutRef.current = setTimeout(() => {
         setIsSuccess(false);
+        setIsDryRunSuccess(false);
         resetTimeoutRef.current = null;
       }, SUCCESS_DURATION_MS);
     } catch (err) {
@@ -364,6 +391,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               />
             </div>
 
+            <div className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <input
+                id="booking-test-only"
+                type="checkbox"
+                checked={testOnlyNoSave}
+                onChange={(e) => setTestOnlyNoSave(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#d5a220] focus:ring-gray-400"
+              />
+              <label htmlFor="booking-test-only" className="text-sm text-gray-700 cursor-pointer">
+                <span className="font-medium text-gray-900">Test only</span>
+                {' — '}
+                Check your details are accepted; nothing is saved and no emails are sent.
+              </label>
+            </div>
+
             <div className="flex flex-col items-center justify-center gap-0 pt-2">
               <button
                 type="submit"
@@ -371,7 +413,13 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white shadow-md min-w-[140px] min-h-[44px] disabled:cursor-default transition-colors duration-300 ease-out"
                 style={{ backgroundColor: isSuccess ? '#9ca3af' : '#d5a220' }}
               >
-                {isSuccess ? '✓ Sent' : 'Send request'}
+                {isSuccess
+                  ? isDryRunSuccess
+                    ? '✓ Test OK (not saved)'
+                    : '✓ Sent'
+                  : testOnlyNoSave
+                    ? 'Run test'
+                    : 'Send request'}
               </button>
             </div>
           </form>

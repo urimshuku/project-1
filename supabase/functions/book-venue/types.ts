@@ -13,6 +13,8 @@ export interface BookVenueRequestBody {
    * Should stay empty; bots often fill it.
    */
   website?: string;
+  /** If true: validate only — no DB row, no emails. */
+  dryRun?: boolean;
 }
 
 export interface ValidatedBookVenueInput {
@@ -48,6 +50,11 @@ export interface ApiErrorResponse {
 
 export interface ApiSuccessResponse {
   success: true;
-  bookingId: string;
-  createdAt: string;
+  /** True when `dryRun` was requested — nothing was saved or emailed. */
+  dryRun?: boolean;
+  message?: string;
+  bookingId?: string;
+  createdAt?: string;
+  /** False when the row was saved but Resend failed (check Edge Function logs). */
+  emailSent?: boolean;
 }

@@ -1,16 +1,9 @@
-import { Resend } from "npm:resend@4.1.2";
 import type { BookingRow } from "./types.ts";
 
 function formatDates(dates: string[]): string {
   if (dates.length === 1) return dates[0];
   if (dates.length === 2) return `${dates[0]} to ${dates[1]}`;
   return dates.join(", ");
-}
-
-function getResendClient(): Resend {
-  const apiKey = Deno.env.get("RESEND_API_KEY")?.trim();
-  if (!apiKey) throw new Error("Missing RESEND_API_KEY");
-  return new Resend(apiKey);
 }
 
 function getAdminEmail(): string {
@@ -21,8 +14,38 @@ function getFromEmail(): string {
   return Deno.env.get("BOOKING_FROM_EMAIL")?.trim() || "Studio Space <bookings@studiospace.community>";
 }
 
+/** Resend REST API — avoids Node-only npm quirks in Deno Edge Functions. */
+async function resendSend(params: {
+  from: string;
+  to: string[];
+  subject: string;
+  text: string;
+}): Promise<void> {
+  const apiKey = Deno.env.get("RESEND_API_KEY")?.trim();
+  if (!apiKey) throw new Error("Missing RESEND_API_KEY");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: params.from,
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    console.error("Resend API error:", res.status, body);
+    throw new Error(`Resend API error: ${res.status}`);
+  }
+}
+
 export async function sendBookingEmails(booking: BookingRow): Promise<void> {
-  const resend = getResendClient();
   const adminEmail = getAdminEmail();
   const fromEmail = getFromEmail();
   const dateSummary = formatDates(booking.dates);
@@ -43,7 +66,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     `Notes: ${booking.notes ?? "None"}`,
   ].join("\n");
 
-  await resend.emails.send({
+  await resendSend({
     from: fromEmail,
     to: [adminEmail],
     subject: adminSubject,
@@ -65,7 +88,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     "Studio Space",
   ].join("\n");
 
-  await resend.emails.send({
+  await resendSend({
     from: fromEmail,
     to: [booking.email],
     subject: userSubject,

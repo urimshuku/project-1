@@ -6,7 +6,7 @@ import type { ApiErrorResponse, ApiSuccessResponse } from "./types.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey, X-Booking-Dry-Run",
 };
 
 function jsonResponse(body: ApiErrorResponse | ApiSuccessResponse, status: number): Response {
@@ -43,15 +43,44 @@ Deno.serve(async (req: Request) => {
 
   try {
     const payload = await req.json();
+    const headerDryRun = req.headers.get("X-Booking-Dry-Run") === "1";
     const validated = validateBookVenuePayload(payload);
-    const booking = await insertBooking(validated);
-    await sendBookingEmails(booking);
+    const dryRun = validated.dryRun || headerDryRun;
+
+    if (dryRun) {
+      return jsonResponse(
+        {
+          success: true,
+          dryRun: true,
+          message: "Validation only — no booking saved and no email sent.",
+        },
+        200,
+      );
+    }
+
+    const booking = await insertBooking(validated.input);
+
+    try {
+      await sendBookingEmails(booking);
+    } catch (emailErr) {
+      console.error("book-venue: booking saved but email failed:", emailErr);
+      return jsonResponse(
+        {
+          success: true,
+          bookingId: booking.id,
+          createdAt: booking.created_at,
+          emailSent: false,
+        },
+        201,
+      );
+    }
 
     return jsonResponse(
       {
         success: true,
         bookingId: booking.id,
         createdAt: booking.created_at,
+        emailSent: true,
       },
       201,
     );

@@ -15,15 +15,15 @@ interface BookingInsertRow {
 
 function getSupabaseClient() {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
-  const supabaseKey =
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ||
-    Deno.env.get("SUPABASE_ANON_KEY")?.trim();
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Missing SUPABASE_URL and/or Supabase key");
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error(
+      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY (add the service role secret to this Edge Function).",
+    );
   }
 
-  return createClient(supabaseUrl, supabaseKey, {
+  return createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
 }
@@ -52,8 +52,8 @@ export async function insertBooking(input: ValidatedBookVenueInput): Promise<Boo
     .single();
 
   if (error) {
-    console.error("bookings insert failed:", error);
-    throw new Error("Failed to save booking");
+    console.error("bookings insert failed:", error.message, error.code, error.details);
+    throw new Error(`Failed to save booking: ${error.message}`);
   }
 
   return data as BookingRow;
