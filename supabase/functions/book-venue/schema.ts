@@ -56,14 +56,7 @@ function normalizeDates(input: string | string[]): string[] {
   return values.map((v) => v.trim()).filter(Boolean);
 }
 
-/** Local instant from YYYY-MM-DD + HH:mm (aligned with browser local parsing). */
-function localDateTimeMs(isoDate: string, hhmm: string): number {
-  const [y, mo, day] = isoDate.split("-").map(Number);
-  const [h, min] = hhmm.split(":").map(Number);
-  return new Date(y, mo - 1, day, h, min, 0, 0).getTime();
-}
-
-export function validateBookVenuePayload(payload: unknown): ValidatedBookVenueInput {
+export function validateBookVenuePayload(payload: unknown): BookVenueValidationResult {
   const parsed = bookVenueSchema.safeParse(payload as BookVenueRequestBody);
   if (!parsed.success) {
     throw parsed.error;
@@ -117,29 +110,16 @@ export function validateBookVenuePayload(payload: unknown): ValidatedBookVenueIn
   }
 
   const sortedDates = [...normalizedDates].sort();
-  if (sortedDates.length === 1) {
-    if (startTime >= endTime) {
-      throw new z.ZodError([
-        {
-          code: z.ZodIssueCode.custom,
-          message: "endTime must be after startTime",
-          path: ["endTime"],
-        },
-      ]);
-    }
-  } else {
-    const startMs = localDateTimeMs(sortedDates[0], startTime);
-    const endMs = localDateTimeMs(sortedDates[sortedDates.length - 1], endTime);
-    if (endMs <= startMs) {
-      throw new z.ZodError([
-        {
-          code: z.ZodIssueCode.custom,
-          message:
-            "endTime on the last day must be after startTime on the first day",
-          path: ["endTime"],
-        },
-      ]);
-    }
+  // Only enforce same-day ordering when a single date is selected (multi-day spans
+  // can legitimately have an earlier clock time on the last day than on the first).
+  if (sortedDates.length === 1 && startTime >= endTime) {
+    throw new z.ZodError([
+      {
+        code: z.ZodIssueCode.custom,
+        message: "endTime must be after startTime",
+        path: ["endTime"],
+      },
+    ]);
   }
 
   const dryRun = Boolean(value.dryRun);

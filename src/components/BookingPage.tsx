@@ -23,13 +23,6 @@ function todayIsoLocal(): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Local instant from YYYY-MM-DD + HH:mm (from `<input type="time">`). */
-function localDateTimeMs(isoDate: string, hhmm: string): number {
-  const [y, mo, day] = isoDate.split('-').map(Number);
-  const [h, min] = hhmm.slice(0, 5).split(':').map(Number);
-  return new Date(y, mo - 1, day, h, min, 0, 0).getTime();
-}
-
 export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [name, setName] = useState('');
@@ -83,20 +76,9 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
       return;
     }
     const sortedDates = [...selectedDates].sort();
-    if (sortedDates.length === 1) {
-      if (startTime >= endTime) {
-        setSubmitError('End time must be after start time.');
-        return;
-      }
-    } else {
-      const startMs = localDateTimeMs(sortedDates[0], startTime);
-      const endMs = localDateTimeMs(sortedDates[sortedDates.length - 1], endTime);
-      if (endMs <= startMs) {
-        setSubmitError(
-          'End time on the last selected day must be after start time on the first selected day.',
-        );
-        return;
-      }
+    if (sortedDates.length === 1 && startTime >= endTime) {
+      setSubmitError('End time must be after start time.');
+      return;
     }
     if (!phone.trim()) {
       setSubmitError('Please enter your phone number.');
