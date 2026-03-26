@@ -12,15 +12,14 @@ interface JoinPageProps {
 
 export function JoinPage({ onBackToActivities }: JoinPageProps) {
   const [fullName, setFullName] = useState('');
-  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [futureActivities, setFutureActivities] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
-
-  const unclickableActivityIds = new Set(['films-documentaries', 'spiritual-events']);
 
   useEffect(() => {
     return () => {
@@ -42,14 +41,16 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
     if (isSubmitting) return;
     console.log({
       fullName,
-      contact,
+      phone,
+      email,
       activities: Array.from(selectedIds),
       futureActivities: futureActivities || undefined,
     });
     setIsSubmitting(true);
     setIsSuccess(true);
     setFullName('');
-    setContact('');
+    setPhone('');
+    setEmail('');
     setFutureActivities('');
     setSelectedIds(new Set());
 
@@ -107,31 +108,22 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                   Activities I’d like to join
                 </legend>
                 <ul className="space-y-2">
-                  {activities.map((activity) => {
-                    const disabled = unclickableActivityIds.has(activity.id);
-                    return (
-                      <li key={activity.id}>
-                        <label
-                          className={`flex items-center gap-3 ${disabled ? 'cursor-default opacity-70' : 'cursor-pointer group'}`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(activity.id)}
-                            onChange={() => !disabled && toggleActivity(activity.id)}
-                            disabled={disabled}
-                            className="w-4 h-4 rounded border-gray-300 text-[#4DA1A9] focus:ring-[#4DA1A9] disabled:opacity-60 disabled:cursor-not-allowed"
-                          />
-                          <span className={disabled ? 'text-gray-500' : 'text-gray-700 group-hover:text-gray-900'}>
-                            {activity.title}
-                          </span>
-                        </label>
-                      </li>
-                    );
-                  })}
+                  {activities.map((activity) => (
+                    <li key={activity.id}>
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(activity.id)}
+                          onChange={() => toggleActivity(activity.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-[#4DA1A9] focus:ring-[#4DA1A9]"
+                        />
+                        <span className="text-gray-700 group-hover:text-gray-900">
+                          {activity.title}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
                 </ul>
-                <p className="text-gray-500 text-xs sm:text-sm mt-2">
-                  Note: Films & Documentaries and Spiritual Events are announced on our Instagram Page.
-                </p>
               </fieldset>
 
               <div className="space-y-4">
@@ -150,15 +142,28 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                   />
                 </div>
                 <div>
-                  <label htmlFor="join-contact" className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact
+                  <label htmlFor="join-phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
                   </label>
                   <input
-                    id="join-contact"
-                    type="text"
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder="Email or phone"
+                    id="join-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Phone number"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="join-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    id="join-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"
                   />
                 </div>
