@@ -18,6 +18,8 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [emailSent, setEmailSent] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
 
@@ -36,30 +38,81 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    console.log({
-      fullName,
-      phone,
-      email,
-      activities: Array.from(selectedIds),
-      futureActivities: futureActivities || undefined,
-    });
-    setIsSubmitting(true);
-    setIsSuccess(true);
-    setFullName('');
-    setPhone('');
-    setEmail('');
-    setFutureActivities('');
-    setSelectedIds(new Set());
+    setSubmitError(null);
 
-    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-    resetTimeoutRef.current = setTimeout(() => {
-      setIsSuccess(false);
+    if (selectedIds.size === 0) {
+      setSubmitError('Please select at least one activity.');
+      return;
+    }
+    if (!fullName.trim()) {
+      setSubmitError('Please enter your full name.');
+      return;
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setSubmitError('Join requests are not configured yet.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/join-activity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
+          activities: Array.from(selectedIds),
+          futureActivities: futureActivities.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const details = data?.details as Record<string, string[]> | undefined;
+        if (details && typeof details === 'object') {
+          const lines = Object.entries(details).flatMap(([key, msgs]) =>
+            (msgs || []).map((m) => `${key}: ${m}`),
+          );
+          setSubmitError(lines.length ? lines.join(' ') : (data?.error as string) || 'Request failed');
+        } else {
+          setSubmitError((data?.error as string) || `Request failed (${res.status})`);
+        }
+        return;
+      }
+
+      const resp = data as { emailSent?: boolean };
+      setEmailSent(resp.emailSent !== false);
+      setIsSuccess(true);
+
+      setFullName('');
+      setPhone('');
+      setEmail('');
+      setFutureActivities('');
+      setSelectedIds(new Set());
+
+      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+      resetTimeoutRef.current = setTimeout(() => {
+        setIsSuccess(false);
+        setIsSubmitting(false);
+        setEmailSent(true);
+        resetTimeoutRef.current = null;
+      }, SUCCESS_DURATION_MS);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      resetTimeoutRef.current = null;
-    }, SUCCESS_DURATION_MS);
+    }
   };
 
   const activities: ActivitySection[] = ACTIVITIES;
@@ -101,6 +154,15 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
             <p className="text-gray-600 text-sm sm:text-base mb-6">
               Choose the activities you’d like to join and tell us your name. We’ll get back to you.
             </p>
+
+            {submitError && (
+              <div
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                role="alert"
+              >
+                {submitError}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <fieldset className="space-y-3">
@@ -183,15 +245,24 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                 />
               </fieldset>
 
-              <div className="pt-2 flex flex-col items-center justify-center">
+              <div className="pt-2 flex flex-col items-center justify-center gap-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isSuccess}
                   className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-white font-bold shadow-md min-h-[44px] disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4DA1A9] transition-colors duration-300 ease-out"
                   style={{ backgroundColor: isSuccess ? '#9ca3af' : '#4DA1A9' }}
                 >
-                {isSuccess ? '✓ Sent' : 'Send request'}
+                  {isSuccess
+                    ? emailSent
+                      ? '✓ Sent'
+                      : '✓ Saved (email failed)'
+                    : 'Send request'}
                 </button>
+                {isSuccess && !emailSent && (
+                  <p className="text-sm text-amber-700 text-center max-w-xs">
+                    Your request was saved but the confirmation email could not be sent. We'll still see your request.
+                  </p>
+                )}
               </div>
             </form>
               </div>
