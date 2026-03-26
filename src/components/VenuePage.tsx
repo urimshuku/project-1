@@ -10,8 +10,8 @@ interface VenuePageProps {
   onBookNow?: () => void;
 }
 
-// Reuse the same placeholder image as the entry page intro
-const INTRO_IMAGE = 'https://placehold.co/1200x680/e5e7eb/9ca3af?text=Studio+Space';
+const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+const INTRO_IMAGE = `${base}/venue-photo.png`;
 
 export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
   return (
