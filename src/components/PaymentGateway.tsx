@@ -7,7 +7,7 @@ interface PaymentGatewayProps {
   onSuccess: () => void;
 }
 
-const PRESET_AMOUNTS = [10, 20, 50, 100];
+const PRESET_AMOUNTS = [20, 50, 100, 500];
 const MAX_WORDS_OF_SUPPORT = 150;
 
 /** Basic email validation */

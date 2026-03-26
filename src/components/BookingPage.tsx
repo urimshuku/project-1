@@ -37,10 +37,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [additionalRequests, setAdditionalRequests] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  /** True when last successful response was dry-run (nothing saved). */
-  const [isDryRunSuccess, setIsDryRunSuccess] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
-  const [testOnlyNoSave, setTestOnlyNoSave] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
@@ -131,7 +128,6 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
           groupSize: size,
           notes: additionalRequests.trim() || undefined,
           website: websiteHoneypot.trim() || undefined,
-          dryRun: testOnlyNoSave,
         }),
       });
 
@@ -150,29 +146,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
         return;
       }
 
-      const resp = data as { dryRun?: boolean; emailSent?: boolean };
-      const dryRun = Boolean(resp.dryRun);
-      setIsDryRunSuccess(dryRun);
+      const resp = data as { emailSent?: boolean };
       setEmailSent(resp.emailSent !== false);
       setIsSuccess(true);
 
-      if (!dryRun) {
-        setSelectedDates([]);
-        setName('');
-        setStartTime('');
-        setEndTime('');
-        setPhone('');
-        setEmail('');
-        setWebsiteHoneypot('');
-        setActivityType('');
-        setGroupSize('');
-        setAdditionalRequests('');
-      }
+      setSelectedDates([]);
+      setName('');
+      setStartTime('');
+      setEndTime('');
+      setPhone('');
+      setEmail('');
+      setWebsiteHoneypot('');
+      setActivityType('');
+      setGroupSize('');
+      setAdditionalRequests('');
 
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
       resetTimeoutRef.current = setTimeout(() => {
         setIsSuccess(false);
-        setIsDryRunSuccess(false);
         setEmailSent(true);
         resetTimeoutRef.current = null;
       }, SUCCESS_DURATION_MS);
@@ -315,7 +306,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
             {/* Email — required for confirmation */}
             <div>
               <label htmlFor="booking-email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                Email Address
               </label>
               <input
                 id="booking-email"
@@ -377,21 +368,6 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               />
             </div>
 
-            <div className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-              <input
-                id="booking-test-only"
-                type="checkbox"
-                checked={testOnlyNoSave}
-                onChange={(e) => setTestOnlyNoSave(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#d5a220] focus:ring-gray-400"
-              />
-              <label htmlFor="booking-test-only" className="text-sm text-gray-700 cursor-pointer">
-                <span className="font-medium text-gray-900">Test only</span>
-                {' — '}
-                Check your details are accepted; nothing is saved and no emails are sent.
-              </label>
-            </div>
-
             <div className="flex flex-col items-center justify-center gap-2 pt-2">
               <button
                 type="submit"
@@ -400,14 +376,10 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 style={{ backgroundColor: isSuccess ? '#9ca3af' : '#d5a220' }}
               >
                 {isSuccess
-                  ? isDryRunSuccess
-                    ? '✓ Test OK (not saved)'
-                    : emailSent
-                      ? '✓ Sent'
-                      : '✓ Saved (email failed)'
-                  : testOnlyNoSave
-                    ? 'Run test'
-                    : 'Send request'}
+                  ? emailSent
+                    ? '✓ Sent'
+                    : '✓ Saved (email failed)'
+                  : 'Send request'}
               </button>
               {isSuccess && !emailSent && (
                 <p className="text-sm text-amber-700 text-center max-w-xs">

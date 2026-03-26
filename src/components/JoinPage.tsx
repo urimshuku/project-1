@@ -156,7 +156,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                 </div>
                 <div>
                   <label htmlFor="join-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    Email Address
                   </label>
                   <input
                     id="join-email"
