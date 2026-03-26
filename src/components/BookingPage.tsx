@@ -39,6 +39,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   /** True when last successful response was dry-run (nothing saved). */
   const [isDryRunSuccess, setIsDryRunSuccess] = useState(false);
+  const [emailSent, setEmailSent] = useState(true);
   const [testOnlyNoSave, setTestOnlyNoSave] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -149,8 +150,10 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
         return;
       }
 
-      const dryRun = Boolean((data as { dryRun?: boolean }).dryRun);
+      const resp = data as { dryRun?: boolean; emailSent?: boolean };
+      const dryRun = Boolean(resp.dryRun);
       setIsDryRunSuccess(dryRun);
+      setEmailSent(resp.emailSent !== false);
       setIsSuccess(true);
 
       if (!dryRun) {
@@ -170,6 +173,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
       resetTimeoutRef.current = setTimeout(() => {
         setIsSuccess(false);
         setIsDryRunSuccess(false);
+        setEmailSent(true);
         resetTimeoutRef.current = null;
       }, SUCCESS_DURATION_MS);
     } catch (err) {
@@ -388,7 +392,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               </label>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-0 pt-2">
+            <div className="flex flex-col items-center justify-center gap-2 pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting || isSuccess}
@@ -398,11 +402,18 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 {isSuccess
                   ? isDryRunSuccess
                     ? '✓ Test OK (not saved)'
-                    : '✓ Sent'
+                    : emailSent
+                      ? '✓ Sent'
+                      : '✓ Saved (email failed)'
                   : testOnlyNoSave
                     ? 'Run test'
                     : 'Send request'}
               </button>
+              {isSuccess && !emailSent && (
+                <p className="text-sm text-amber-700 text-center max-w-xs">
+                  Your booking was saved but the confirmation email could not be sent. We'll still see your request.
+                </p>
+              )}
             </div>
           </form>
           </div>

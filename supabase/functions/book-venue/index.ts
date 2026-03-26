@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
   try {
     const payload = await req.json();
     const headerDryRun = req.headers.get("X-Booking-Dry-Run") === "1";
-    const validated = validateBookVenuePayload(payload);
+    const validated = await validateBookVenuePayload(payload);
     const dryRun = validated.dryRun || headerDryRun;
 
     if (dryRun) {

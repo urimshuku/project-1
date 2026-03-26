@@ -58,7 +58,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     `Created At: ${booking.created_at}`,
     `Name: ${booking.full_name}`,
     `Phone: ${booking.phone}`,
-    `Email: ${booking.email}`,
+    `Email: ${booking.email ?? "(not provided)"}`,
     `Activity: ${booking.activity_type}`,
     `Group Size: ${booking.group_size}`,
     `Dates: ${dateSummary}`,
@@ -66,12 +66,19 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     `Notes: ${booking.notes ?? "None"}`,
   ].join("\n");
 
+  console.log(`book-venue: sending admin email to ${adminEmail} from ${fromEmail}`);
   await resendSend({
     from: fromEmail,
     to: [adminEmail],
     subject: adminSubject,
     text: adminText,
   });
+  console.log("book-venue: admin email sent successfully");
+
+  if (!booking.email) {
+    console.warn("book-venue: no user email — skipping confirmation email");
+    return;
+  }
 
   const userSubject = "We received your Studio Space booking request";
   const userText = [
@@ -88,10 +95,12 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     "Studio Space",
   ].join("\n");
 
+  console.log(`book-venue: sending confirmation email to ${booking.email}`);
   await resendSend({
     from: fromEmail,
     to: [booking.email],
     subject: userSubject,
     text: userText,
   });
+  console.log("book-venue: confirmation email sent successfully");
 }
