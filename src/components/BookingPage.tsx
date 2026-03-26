@@ -38,6 +38,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
+  const [processingDots, setProcessingDots] = useState(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
@@ -55,11 +56,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     setSelectedDates((prev) => prev.filter((k) => k >= bookingMinDate));
   }, [bookingMinDate]);
 
+  // Simple "processing" indicator while the request is in flight.
+  useEffect(() => {
+    if (!isSubmitting || isSuccess) return;
+    setProcessingDots(1);
+    const id = setInterval(() => {
+      setProcessingDots((n) => (n % 3) + 1);
+    }, 500);
+    return () => clearInterval(id);
+  }, [isSubmitting, isSuccess]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
     setSubmitError(null);
+    setIsSuccess(false);
+    setEmailSent(true);
+    setProcessingDots(1);
 
     if (selectedDates.length === 0) {
       setSubmitError('Please select at least one date.');
@@ -379,7 +393,9 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                   ? emailSent
                     ? '✓ Sent'
                     : '✓ Saved (email failed)'
-                  : 'Send request'}
+                  : isSubmitting
+                    ? `Processing${'.'.repeat(processingDots)}`
+                    : 'Send request'}
               </button>
               {isSuccess && !emailSent && (
                 <p className="text-sm text-amber-700 text-center max-w-xs">

@@ -19,6 +19,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
+  const [processingDots, setProcessingDots] = useState(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
@@ -28,6 +29,16 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
     };
   }, []);
+
+  // Simple "processing" indicator while the request is in flight.
+  useEffect(() => {
+    if (!isSubmitting || isSuccess) return;
+    setProcessingDots(1);
+    const id = setInterval(() => {
+      setProcessingDots((n) => (n % 3) + 1);
+    }, 500);
+    return () => clearInterval(id);
+  }, [isSubmitting, isSuccess]);
 
   const toggleActivity = (id: string) => {
     setSelectedIds((prev) => {
@@ -60,6 +71,9 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
     }
 
     setIsSubmitting(true);
+    setIsSuccess(false);
+    setEmailSent(true);
+    setProcessingDots(1);
     try {
       const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/join-activity`, {
         method: 'POST',
@@ -256,7 +270,9 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                     ? emailSent
                       ? '✓ Sent'
                       : '✓ Saved (email failed)'
-                    : 'Send request'}
+                    : isSubmitting
+                      ? `Processing${'.'.repeat(processingDots)}`
+                      : 'Send request'}
                 </button>
                 {isSuccess && !emailSent && (
                   <p className="text-sm text-amber-700 text-center max-w-xs">
