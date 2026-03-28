@@ -56,12 +56,79 @@ const page = (title: string, body: string) => `<!DOCTYPE html>
 const uuidRe =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const isoDateRe = /^\d{4}-\d{2}-\d{2}$/;
+
+function enumerateInclusiveDates(startIsoDate: string, endIsoDate: string): string[] {
+  const out: string[] = [];
+  let cur = new Date(startIsoDate + "T12:00:00");
+  const end = new Date(endIsoDate + "T12:00:00");
+  while (cur <= end) {
+    const y = cur.getFullYear();
+    const mo = String(cur.getMonth() + 1).padStart(2, "0");
+    const day = String(cur.getDate()).padStart(2, "0");
+    out.push(`${y}-${mo}-${day}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+/** `bookings.dates` is text[]; PostgREST usually returns a JSON array, but normalize defensively. */
+function rawDatesToStrings(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((x) => String(x).trim()).filter(Boolean);
+  }
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (t.startsWith("{") && t.endsWith("}")) {
+      const inner = t.slice(1, -1).trim();
+      if (!inner) return [];
+      return inner.split(",").map((s) => s.replace(/^"|"$/g, "").trim()).filter(Boolean);
+    }
+    try {
+      const j = JSON.parse(t) as unknown;
+      if (Array.isArray(j)) return rawDatesToStrings(j);
+    } catch {
+      /* ignore */
+    }
+    if (isoDateRe.test(t.slice(0, 10))) return [t.slice(0, 10)];
+  }
+  return [];
+}
+
+function normalizeBlockedDateList(booking: {
+  dates: unknown;
+  booking_mode: string | null;
+  continuous_start: string | null;
+  continuous_end: string | null;
+}): string[] {
+  const fromDb = [
+    ...new Set(
+      rawDatesToStrings(booking.dates)
+        .map((d) => d.slice(0, 10))
+        .filter((d) => isoDateRe.test(d)),
+    ),
+  ].sort();
+
+  if (fromDb.length > 0) return fromDb;
+
+  const mode = booking.booking_mode ?? "non_continuous";
+  if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
+    const s = booking.continuous_start.trim().slice(0, 10);
+    const e = booking.continuous_end.trim().slice(0, 10);
+    if (isoDateRe.test(s) && isoDateRe.test(e)) {
+      return enumerateInclusiveDates(s, e);
+    }
+  }
+
+  return [];
+}
+
 async function runApprove(token: string): Promise<Response> {
   const supabase = getSupabaseAdmin();
 
   const { data: booking, error: fetchErr } = await supabase
     .from("bookings")
-    .select("id, dates, approved_at")
+    .select("id, dates, approved_at, booking_mode, continuous_start, continuous_end")
     .eq("approval_token", token)
     .maybeSingle();
 
@@ -90,23 +157,17 @@ async function runApprove(token: string): Promise<Response> {
     );
   }
 
-  const dates = (booking.dates as string[]) ?? [];
-  if (dates.length === 0) {
+  const blockDates = normalizeBlockedDateList(booking);
+  if (blockDates.length === 0) {
+    console.error("approve-booking: no dates after normalize", {
+      id: booking.id,
+      rawDates: booking.dates,
+      mode: booking.booking_mode,
+    });
     return htmlResponse(page("Error", "<p>This booking has no dates to approve.</p>"), 500);
   }
 
-  const now = new Date().toISOString();
-  const { error: updateErr } = await supabase
-    .from("bookings")
-    .update({ approved_at: now })
-    .eq("id", booking.id);
-
-  if (updateErr) {
-    console.error("approve-booking update:", updateErr);
-    return htmlResponse(page("Error", "<p>Could not approve this booking. Try again later.</p>"), 500);
-  }
-
-  const rows = dates.map((d) => ({
+  const rows = blockDates.map((d) => ({
     blocked_date: d,
     booking_id: booking.id,
   }));
@@ -117,9 +178,22 @@ async function runApprove(token: string): Promise<Response> {
 
   if (blockErr) {
     console.error("approve-booking blocks:", blockErr);
-    await supabase.from("bookings").update({ approved_at: null }).eq("id", booking.id);
     return htmlResponse(page("Error", "<p>Could not block the calendar dates. Try again later.</p>"), 500);
   }
+
+  const now = new Date().toISOString();
+  const { error: updateErr } = await supabase
+    .from("bookings")
+    .update({ approved_at: now })
+    .eq("id", booking.id);
+
+  if (updateErr) {
+    console.error("approve-booking update:", updateErr);
+    await supabase.from("venue_blocked_dates").delete().eq("booking_id", booking.id);
+    return htmlResponse(page("Error", "<p>Could not finalize approval. Try again later.</p>"), 500);
+  }
+
+  console.log("approve-booking: approved", booking.id, "blocked", blockDates);
 
   return htmlResponse(
     page(

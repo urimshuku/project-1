@@ -1,0 +1,5 @@
+# Supabase CLI — https://supabase.com/docs/guides/cli/config
+# Approve link is opened from email and POSTs without a JWT; disable JWT gate.
+
+[functions.approve-booking]
+verify_jwt = false

@@ -23,22 +23,95 @@ function formatPerDateTimes(entries: PerDateTimeEntry[]): string {
     .join("\n");
 }
 
-/** One line per calendar day so dates always pair with times in emails. */
-function formatDatesWithTimesLines(
+/** Local "datetime-local" instant for comparisons (matches book-venue schema). */
+function dateTimeLocalToMs(s: string): number {
+  const [datePart, timePart] = s.trim().split("T");
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = timePart.split(":").map(Number);
+  return new Date(y, m - 1, d, hh, mm).getTime();
+}
+
+/**
+ * When end clock time is before start (e.g. 07:00 vs 09:00), shared times mean
+ * "start on the first selected day @ start, end on the last @ end" — not the same
+ * hours repeated on every listed day.
+ */
+function isFirstDayThroughLastDayWindow(
+  sortedDates: string[],
+  startHhmm: string,
+  endHhmm: string,
+): boolean {
+  if (sortedDates.length < 2) return false;
+  if (startHhmm < endHhmm) return false;
+  const startDt = `${sortedDates[0]}T${startHhmm}`;
+  const endDt = `${sortedDates[sortedDates.length - 1]}T${endHhmm}`;
+  return dateTimeLocalToMs(endDt) > dateTimeLocalToMs(startDt);
+}
+
+type NonContinuousScheduleKind =
+  | "per_day_custom"
+  | "same_hours_each_day"
+  | "first_last_window"
+  | "empty";
+
+type NonContinuousEmailBody = {
+  typeLine: string;
+  detailHeader: string;
+  body: string;
+  kind: NonContinuousScheduleKind;
+};
+
+function formatNonContinuousScheduleForEmail(
   dates: string[] | null | undefined,
   per: PerDateTimeEntry[] | null,
   startTime: string,
   endTime: string,
-): string {
+): NonContinuousEmailBody {
   if (per && per.length > 0) {
-    return formatPerDateTimes(per);
+    return {
+      typeLine: "Type: Non-continuous (custom time per day)",
+      detailHeader: "Dates & times (one row per day):",
+      body: formatPerDateTimes(per),
+      kind: "per_day_custom",
+    };
   }
   const list = Array.isArray(dates) ? dates : [];
   if (list.length === 0) {
-    return "(No dates listed)";
+    return {
+      typeLine: "Type: Non-continuous",
+      detailHeader: "",
+      body: "(No dates listed)",
+      kind: "empty",
+    };
   }
   const sorted = [...list].sort();
-  return sorted.map((d) => `${d}: ${startTime}–${endTime}`).join("\n");
+  const st = (startTime ?? "").trim().slice(0, 5);
+  const et = (endTime ?? "").trim().slice(0, 5);
+
+  if (isFirstDayThroughLastDayWindow(sorted, st, et)) {
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    return {
+      typeLine:
+        "Type: Non-continuous (one window: start on first selected day, end on last — not the same hours every day)",
+      detailHeader: "Booking window and selected days:",
+      body: [
+        `From: ${first} ${st}`,
+        `To:   ${last} ${et}`,
+        "",
+        "Selected calendar day(s) (may include gaps):",
+        sorted.join(", "),
+      ].join("\n"),
+      kind: "first_last_window",
+    };
+  }
+
+  return {
+    typeLine: "Type: Non-continuous (same hours on each listed day)",
+    detailHeader: "Dates & times (one row per day):",
+    body: sorted.map((d) => `${d}: ${st}–${et}`).join("\n"),
+    kind: "same_hours_each_day",
+  };
 }
 
 function scheduleBlock(booking: BookingRow): string {
@@ -52,24 +125,13 @@ function scheduleBlock(booking: BookingRow): string {
     ].join("\n");
   }
   const per = normalizePerDateEntries(booking.per_date_times);
-  const scheduleLines = formatDatesWithTimesLines(
+  const { typeLine, detailHeader, body } = formatNonContinuousScheduleForEmail(
     booking.dates,
     per,
     booking.start_time,
     booking.end_time,
   );
-  if (per) {
-    return [
-      "Type: Non-continuous (custom time per day)",
-      "Dates & times (one row per day):",
-      scheduleLines,
-    ].join("\n");
-  }
-  return [
-    "Type: Non-continuous (same hours on each listed day)",
-    "Dates & times (one row per day):",
-    scheduleLines,
-  ].join("\n");
+  return [typeLine, detailHeader, body].filter(Boolean).join("\n");
 }
 
 function scheduleBlockUser(booking: BookingRow): string {
@@ -78,13 +140,19 @@ function scheduleBlockUser(booking: BookingRow): string {
     return `When: ${booking.continuous_start} → ${booking.continuous_end} (continuous booking)`;
   }
   const per = normalizePerDateEntries(booking.per_date_times);
-  const lines = formatDatesWithTimesLines(
+  const { kind, body } = formatNonContinuousScheduleForEmail(
     booking.dates,
     per,
     booking.start_time,
     booking.end_time,
   );
-  return ["Dates & times (each line is one day):", lines].join("\n");
+  const userHeader =
+    kind === "first_last_window"
+      ? "Your requested window:"
+      : kind === "same_hours_each_day" || kind === "per_day_custom"
+        ? "Dates & times (each line is one day):"
+        : "Schedule:";
+  return `${userHeader}\n${body}`;
 }
 
 function getAdminEmail(): string {

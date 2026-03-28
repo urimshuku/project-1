@@ -300,6 +300,24 @@ function combineDateAndTime(isoDate: string, hhmm: string): string {
   return `${isoDate}T${pad}`;
 }
 
+/**
+ * End clock time before start (e.g. 07:00 vs 09:00) with multiple days means one window from
+ * first day @ start through last day @ end — not the same hours on every selected day.
+ */
+function isFirstDayThroughLastDayWindow(
+  sortedIso: string[],
+  startHhmm: string,
+  endHhmm: string,
+): boolean {
+  if (sortedIso.length < 2) return false;
+  const st = startHhmm.trim().slice(0, 5);
+  const et = endHhmm.trim().slice(0, 5);
+  if (st < et) return false;
+  const t0 = parseDateTimeLocal(combineDateAndTime(sortedIso[0], st));
+  const t1 = parseDateTimeLocal(combineDateAndTime(sortedIso[sortedIso.length - 1], et));
+  return t0 !== null && t1 !== null && t1 > t0;
+}
+
 /** Normalize DB date / timestamptz to YYYY-MM-DD for calendar keys. */
 function asIsoDateOnly(s: string): string {
   return s.slice(0, 10);
@@ -380,6 +398,27 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     return () => {
       cancelled = true;
       void supabase.removeChannel(channel);
+    };
+  }, []);
+
+  /** Refetch when the tab is focused — Realtime is optional; approval happens in another tab/window. */
+  useEffect(() => {
+    if (!supabase) return;
+    const refetchBlocked = () => {
+      if (document.visibilityState !== 'visible') return;
+      void supabase.from('venue_blocked_dates').select('blocked_date').then(({ data, error }) => {
+        if (error) {
+          console.warn('venue_blocked_dates:', error.message);
+          return;
+        }
+        setBlockedDateSet(new Set((data ?? []).map((r) => asIsoDateOnly(r.blocked_date))));
+      });
+    };
+    document.addEventListener('visibilitychange', refetchBlocked);
+    window.addEventListener('focus', refetchBlocked);
+    return () => {
+      document.removeEventListener('visibilitychange', refetchBlocked);
+      window.removeEventListener('focus', refetchBlocked);
     };
   }, []);
 
@@ -479,6 +518,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
           err.schedule = 'Please use valid start and end times.';
         } else if (t1 <= t0) {
           err.schedule = 'End date and time must be after start date and time.';
+        }
+      } else if (sortedDates.length >= 2) {
+        const st = startTime.trim().slice(0, 5);
+        const et = endTime.trim().slice(0, 5);
+        if (st >= et) {
+          const startDateTime = combineDateAndTime(sortedDates[0], startTime);
+          const endDateTime = combineDateAndTime(sortedDates[sortedDates.length - 1], endTime);
+          const t0 = parseDateTimeLocal(startDateTime);
+          const t1 = parseDateTimeLocal(endDateTime);
+          if (t0 === null || t1 === null) {
+            err.schedule = 'Please use valid start and end times.';
+          } else if (t1 <= t0) {
+            err.schedule =
+              'End date and time must be after start date and time (your end time is on the last selected day, not the same clock time on every day).';
+          }
         }
       } else if (sortedDates.length === 1 && startTime >= endTime) {
         err.schedule = 'End time must be after start time.';
@@ -812,9 +866,16 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                             <span className="text-gray-500"> · Last day ends: </span>
                             {formatTimeHm(endTime) || '—'}
                           </p>
-                          {submitAsContinuous &&
+                          {!customPerDay &&
+                            sortedSelectedDates.length >= 2 &&
                             startTime.trim() &&
                             endTime.trim() &&
+                            (submitAsContinuous ||
+                              isFirstDayThroughLastDayWindow(
+                                sortedSelectedDates,
+                                startTime,
+                                endTime,
+                              )) &&
                             (() => {
                               const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
                               const edt = combineDateAndTime(
@@ -825,10 +886,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                               const t1 = parseDateTimeLocal(edt);
                               const ok = t0 !== null && t1 !== null && t1 > t0;
                               if (ok) {
+                                const gapNote =
+                                  !submitAsContinuous &&
+                                  isFirstDayThroughLastDayWindow(
+                                    sortedSelectedDates,
+                                    startTime,
+                                    endTime,
+                                  );
                                 return (
                                   <p className="text-gray-600">
                                     <span className="text-gray-500">Window: </span>
                                     {formatDateTimeLocalPreview(sdt)} → {formatDateTimeLocalPreview(edt)}
+                                    {gapNote && (
+                                      <span className="text-gray-500">
+                                        {' '}
+                                        (start on first selected day, end on last; unselected days in between are not part
+                                        of this request)
+                                      </span>
+                                    )}
                                   </p>
                                 );
                               }
