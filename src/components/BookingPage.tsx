@@ -16,6 +16,85 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+/** Matches book-venue Zod paths + UI grouping for dates/times. */
+type BookingFieldKey =
+  | 'fullName'
+  | 'phone'
+  | 'email'
+  | 'activityType'
+  | 'groupSize'
+  | 'dates'
+  | 'schedule'
+  | 'notes'
+  | '_form';
+
+type BookingFieldErrors = Partial<Record<BookingFieldKey, string>>;
+
+function joinApiMessages(msgs: string[] | undefined): string {
+  if (!msgs?.length) return '';
+  return [...new Set(msgs.filter(Boolean))].join('; ');
+}
+
+function mapApiDetailsToFieldErrors(details: Record<string, string[]>): BookingFieldErrors {
+  const out: BookingFieldErrors = {};
+  const scheduleParts: string[] = [];
+  for (const [key, msgs] of Object.entries(details)) {
+    const text = joinApiMessages(msgs);
+    if (!text) continue;
+    switch (key) {
+      case 'fullName':
+        out.fullName = text;
+        break;
+      case 'phone':
+        out.phone = text;
+        break;
+      case 'email':
+        out.email = text;
+        break;
+      case 'activityType':
+        out.activityType = text;
+        break;
+      case 'groupSize':
+        out.groupSize = text;
+        break;
+      case 'dates':
+        out.dates = text;
+        break;
+      case 'perDateTimes':
+      case 'startTime':
+      case 'endTime':
+      case 'startDateTime':
+      case 'endDateTime':
+        scheduleParts.push(text);
+        break;
+      case 'notes':
+        out.notes = text;
+        break;
+      default:
+        out._form = out._form ? `${out._form} ${text}` : text;
+    }
+  }
+  if (scheduleParts.length) {
+    out.schedule = scheduleParts.join(' ');
+  }
+  return out;
+}
+
+function inputErrorRing(hasError: boolean): string {
+  return hasError
+    ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
+    : 'border-gray-300 focus:ring-gray-400 focus:border-gray-400';
+}
+
+function BookingFieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="mt-1.5 text-sm text-red-700" role="alert">
+      {message}
+    </p>
+  );
+}
+
 /** Today in local time as YYYY-MM-DD — used so past dates stay disabled as the calendar rolls forward. */
 function todayIsoLocal(): string {
   const d = new Date();
@@ -245,7 +324,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
   const [processingDots, setProcessingDots] = useState(1);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<BookingFieldErrors>({});
   const [submitInfo, setSubmitInfo] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
@@ -358,7 +437,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     e.preventDefault();
     if (isSubmitting) return;
 
-    setSubmitError(null);
+    setFieldErrors({});
     setSubmitInfo(null);
     setIsSuccess(false);
     setEmailSent(true);
@@ -368,77 +447,82 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     const contiguous = sortedDates.length > 0 && areContiguousCalendarDays(sortedDates);
     const asContinuous = contiguous && !customPerDay;
 
+    const err: BookingFieldErrors = {};
+
     if (selectedDates.length === 0) {
-      setSubmitError('Please select at least one date on the calendar.');
-      return;
+      err.dates = 'Please select at least one date on the calendar.';
+    } else if (selectedDates.some((k) => k < bookingMinDate)) {
+      err.dates = 'Please choose only today or future dates.';
     }
-    if (selectedDates.some((k) => k < bookingMinDate)) {
-      setSubmitError('Please choose only today or future dates.');
-      return;
-    }
+
     if (customPerDay) {
       for (const d of sortedDates) {
         const row = perDayTimes[d];
         if (!row?.start?.trim() || !row?.end?.trim()) {
-          setSubmitError('Please set a start and end time for each selected date.');
-          return;
+          err.schedule = 'Please set a start and end time for each selected date.';
+          break;
         }
         if (row.start >= row.end) {
-          setSubmitError(`End time must be after start time on ${d}.`);
-          return;
+          err.schedule = `End time must be after start time on ${d}.`;
+          break;
         }
       }
     } else {
       if (!startTime.trim() || !endTime.trim()) {
-        setSubmitError('Please enter a start and end time.');
-        return;
-      }
-      if (asContinuous) {
+        err.schedule = 'Please enter a start and end time.';
+      } else if (asContinuous) {
         const startDateTime = combineDateAndTime(sortedDates[0], startTime);
         const endDateTime = combineDateAndTime(sortedDates[sortedDates.length - 1], endTime);
         const t0 = parseDateTimeLocal(startDateTime);
         const t1 = parseDateTimeLocal(endDateTime);
         if (t0 === null || t1 === null) {
-          setSubmitError('Please use valid start and end times.');
-          return;
-        }
-        if (t1 <= t0) {
-          setSubmitError('End date and time must be after start date and time.');
-          return;
+          err.schedule = 'Please use valid start and end times.';
+        } else if (t1 <= t0) {
+          err.schedule = 'End date and time must be after start date and time.';
         }
       } else if (sortedDates.length === 1 && startTime >= endTime) {
-        setSubmitError('End time must be after start time.');
-        return;
+        err.schedule = 'End time must be after start time.';
       }
     }
+
+    const nameTrimmed = name.trim();
+    if (!nameTrimmed) {
+      err.fullName = 'Please enter your full name.';
+    } else if (nameTrimmed.length < 2) {
+      err.fullName = 'Please enter at least 2 characters for your name.';
+    }
+
     if (!phone.trim()) {
-      setSubmitError('Please enter your phone number.');
-      return;
+      err.phone = 'Please enter your phone number.';
     }
+
     if (!activityType.trim()) {
-      setSubmitError('Please enter the type of activity.');
-      return;
+      err.activityType = 'Please enter the type of activity.';
     }
+
     const size = Number(groupSize);
     if (!groupSize.trim() || Number.isNaN(size) || size < 1) {
-      setSubmitError('Please enter a valid group size (at least 1).');
-      return;
+      err.groupSize = 'Please enter a valid group size (at least 1).';
     }
+
     if (!email.trim()) {
-      setSubmitError('Please enter your email address.');
-      return;
+      err.email = 'Please enter your email address.';
+    } else if (!isValidEmail(email)) {
+      err.email = 'Please enter a valid email address.';
     }
-    if (!isValidEmail(email)) {
-      setSubmitError('Please enter a valid email address.');
+
+    if (Object.keys(err).length > 0) {
+      setFieldErrors(err);
       return;
     }
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseAnonKey) {
-      setSubmitError(
-        'Booking is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, and deploy the book-venue Edge Function.',
-      );
+      setFieldErrors({
+        _form:
+          'Booking is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, and deploy the book-venue Edge Function.',
+      });
       return;
     }
 
@@ -505,13 +589,12 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
 
       if (!res.ok) {
         const details = data?.details as Record<string, string[]> | undefined;
-        if (details && typeof details === 'object') {
-          const lines = Object.entries(details).flatMap(([key, msgs]) =>
-            (msgs || []).map((m) => `${key}: ${m}`),
-          );
-          setSubmitError(lines.length ? lines.join(' ') : (data?.error as string) || 'Request failed');
+        if (details && typeof details === 'object' && Object.keys(details).length > 0) {
+          setFieldErrors(mapApiDetailsToFieldErrors(details));
         } else {
-          setSubmitError((data?.error as string) || `Request failed (${res.status})`);
+          setFieldErrors({
+            _form: (data?.error as string) || `Request failed (${res.status})`,
+          });
         }
         return;
       }
@@ -522,6 +605,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
         setSubmitInfo(resp.message);
       }
       setIsSuccess(true);
+      setFieldErrors({});
 
       setSelectedDates([]);
       setCustomPerDay(false);
@@ -543,7 +627,9 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
         resetTimeoutRef.current = null;
       }, SUCCESS_DURATION_MS);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setFieldErrors({
+        _form: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -585,12 +671,12 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               Choose dates on the calendar, set your times, add activity details, and we’ll get back to you to confirm.
             </p>
 
-            {submitError && (
+            {fieldErrors._form && (
               <div
                 className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
                 role="alert"
               >
-                {submitError}
+                {fieldErrors._form}
               </div>
             )}
             {submitInfo && (
@@ -626,11 +712,19 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               <div className="flex justify-center">
                 <BookingCalendar
                   selectedDates={selectedDates}
-                  onChange={setSelectedDates}
+                  onChange={(next) => {
+                    setSelectedDates(next);
+                    setFieldErrors((prev) => {
+                      if (!prev.dates) return prev;
+                      const { dates: _d, ...rest } = prev;
+                      return rest;
+                    });
+                  }}
                   minDate={bookingMinDate}
                   blockedDates={blockedDateSet}
                 />
               </div>
+              <BookingFieldError id="booking-dates-error" message={fieldErrors.dates} />
 
               <div
                 className="rounded-lg border border-gray-200 bg-gray-50/90 px-3 py-2.5 text-sm max-w-md mx-auto w-full"
@@ -789,12 +883,17 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                             size="compact"
                             aria-label={`Start time ${d}`}
                             value={perDayTimes[d]?.start ?? ''}
-                            onChange={(next) =>
+                            onChange={(next) => {
                               setPerDayTimes((prev) => ({
                                 ...prev,
                                 [d]: { ...prev[d], start: next, end: prev[d]?.end ?? '' },
-                              }))
-                            }
+                              }));
+                              setFieldErrors((prev) => {
+                                if (!prev.schedule) return prev;
+                                const { schedule: _s, ...rest } = prev;
+                                return rest;
+                              });
+                            }}
                           />
                           <span className="text-gray-400 text-xs shrink-0">–</span>
                           <TimeInput24h
@@ -802,12 +901,17 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                             size="compact"
                             aria-label={`End time ${d}`}
                             value={perDayTimes[d]?.end ?? ''}
-                            onChange={(next) =>
+                            onChange={(next) => {
                               setPerDayTimes((prev) => ({
                                 ...prev,
                                 [d]: { ...prev[d], start: prev[d]?.start ?? '', end: next },
-                              }))
-                            }
+                              }));
+                              setFieldErrors((prev) => {
+                                if (!prev.schedule) return prev;
+                                const { schedule: _s, ...rest } = prev;
+                                return rest;
+                              });
+                            }}
                           />
                         </div>
                       </div>
@@ -827,7 +931,14 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                       id="booking-start-time"
                       aria-label="Start time (first day)"
                       value={startTime}
-                      onChange={setStartTime}
+                      onChange={(v) => {
+                        setStartTime(v);
+                        setFieldErrors((prev) => {
+                          if (!prev.schedule) return prev;
+                          const { schedule: _s, ...rest } = prev;
+                          return rest;
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -838,11 +949,19 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                       id="booking-end-time"
                       aria-label="End time (last day)"
                       value={endTime}
-                      onChange={setEndTime}
+                      onChange={(v) => {
+                        setEndTime(v);
+                        setFieldErrors((prev) => {
+                          if (!prev.schedule) return prev;
+                          const { schedule: _s, ...rest } = prev;
+                          return rest;
+                        });
+                      }}
                     />
                   </div>
                 </div>
               )}
+              <BookingFieldError id="booking-schedule-error" message={fieldErrors.schedule} />
             </fieldset>
 
             {/* Full Name */}
@@ -854,11 +973,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setFieldErrors((prev) => {
+                    if (!prev.fullName) return prev;
+                    const { fullName: _f, ...rest } = prev;
+                    return rest;
+                  });
+                }}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.fullName)}
+                aria-describedby={fieldErrors.fullName ? 'booking-name-error' : undefined}
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 ${inputErrorRing(Boolean(fieldErrors.fullName))}`}
                 placeholder="Full Name"
               />
+              <BookingFieldError id="booking-name-error" message={fieldErrors.fullName} />
             </div>
 
             {/* Phone */}
@@ -870,11 +999,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-phone"
                 {...PHONE_INPUT_ATTRS}
                 value={phone}
-                onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                onChange={(e) => {
+                  setPhone(sanitizePhoneInput(e.target.value));
+                  setFieldErrors((prev) => {
+                    if (!prev.phone) return prev;
+                    const { phone: _p, ...rest } = prev;
+                    return rest;
+                  });
+                }}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.phone)}
+                aria-describedby={fieldErrors.phone ? 'booking-phone-error' : undefined}
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 ${inputErrorRing(Boolean(fieldErrors.phone))}`}
                 placeholder="Phone number"
               />
+              <BookingFieldError id="booking-phone-error" message={fieldErrors.phone} />
             </div>
 
             {/* Email — required for confirmation */}
@@ -886,12 +1025,26 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors((prev) => {
+                    if (!prev.email) return prev;
+                    const { email: _em, ...rest } = prev;
+                    return rest;
+                  });
+                }}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={
+                  fieldErrors.email ? 'booking-email-error booking-email-hint' : 'booking-email-hint'
+                }
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 ${inputErrorRing(Boolean(fieldErrors.email))}`}
                 placeholder="you@example.com"
               />
-              <p className="mt-1 text-xs text-gray-500">Already signed up? Use the same email to update your request.</p>
+              <BookingFieldError id="booking-email-error" message={fieldErrors.email} />
+              <p id="booking-email-hint" className="mt-1 text-xs text-gray-500">
+                Already signed up? Use the same email to update your request.
+              </p>
             </div>
 
             {/* Type of Activity */}
@@ -903,11 +1056,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-activity"
                 type="text"
                 value={activityType}
-                onChange={(e) => setActivityType(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                onChange={(e) => {
+                  setActivityType(e.target.value);
+                  setFieldErrors((prev) => {
+                    if (!prev.activityType) return prev;
+                    const { activityType: _a, ...rest } = prev;
+                    return rest;
+                  });
+                }}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.activityType)}
+                aria-describedby={fieldErrors.activityType ? 'booking-activity-error' : undefined}
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 ${inputErrorRing(Boolean(fieldErrors.activityType))}`}
                 placeholder="e.g. Book club, Workshop, Film screening"
               />
+              <BookingFieldError id="booking-activity-error" message={fieldErrors.activityType} />
             </div>
 
             {/* Group size */}
@@ -921,11 +1084,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 min={1}
                 max={2000}
                 value={groupSize}
-                onChange={(e) => setGroupSize(e.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                onChange={(e) => {
+                  setGroupSize(e.target.value);
+                  setFieldErrors((prev) => {
+                    if (!prev.groupSize) return prev;
+                    const { groupSize: _g, ...rest } = prev;
+                    return rest;
+                  });
+                }}
+                aria-required="true"
+                aria-invalid={Boolean(fieldErrors.groupSize)}
+                aria-describedby={fieldErrors.groupSize ? 'booking-group-size-error' : undefined}
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 ${inputErrorRing(Boolean(fieldErrors.groupSize))}`}
                 placeholder="e.g. 8"
               />
+              <BookingFieldError id="booking-group-size-error" message={fieldErrors.groupSize} />
             </div>
 
             {/* Other Requests or Considerations */}
@@ -936,11 +1109,21 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               <textarea
                 id="booking-requests"
                 value={additionalRequests}
-                onChange={(e) => setAdditionalRequests(e.target.value)}
+                onChange={(e) => {
+                  setAdditionalRequests(e.target.value);
+                  setFieldErrors((prev) => {
+                    if (!prev.notes) return prev;
+                    const { notes: _n, ...rest } = prev;
+                    return rest;
+                  });
+                }}
                 rows={4}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400 resize-y"
+                aria-invalid={Boolean(fieldErrors.notes)}
+                aria-describedby={fieldErrors.notes ? 'booking-requests-error' : undefined}
+                className={`w-full rounded-lg border px-3 py-2.5 text-gray-900 focus:ring-2 resize-y ${inputErrorRing(Boolean(fieldErrors.notes))}`}
                 placeholder="Any special requirements, times, or notes…"
               />
+              <BookingFieldError id="booking-requests-error" message={fieldErrors.notes} />
             </div>
 
             <div className="flex flex-col items-center justify-center gap-2 pt-2">
