@@ -1,26 +1,41 @@
-export interface BookVenueRequestBody {
-  dates: string | string[];
+export type BookingMode = "continuous" | "non_continuous";
+
+export interface PerDateTimeEntry {
+  date: string;
   startTime: string;
   endTime: string;
+}
+
+export interface BookVenueRequestBody {
+  bookingMode?: BookingMode;
+  /** Continuous: ISO local datetime YYYY-MM-DDTHH:mm */
+  startDateTime?: string;
+  endDateTime?: string;
+  /** Non-continuous */
+  dates?: string | string[];
+  startTime?: string;
+  endTime?: string;
+  perDateTimes?: PerDateTimeEntry[] | null;
   fullName: string;
   phone: string;
   activityType: string;
   groupSize: number;
   notes?: string;
   email: string;
-  /**
-   * Honeypot field for spam protection.
-   * Should stay empty; bots often fill it.
-   */
   website?: string;
-  /** If true: validate only — no DB row, no emails. */
   dryRun?: boolean;
+  recaptchaToken?: string;
 }
 
 export interface ValidatedBookVenueInput {
+  bookingMode: BookingMode;
   dates: string[];
+  /** Summary times (non-continuous same-for-all, or continuous first/last clock times) */
   startTime: string;
   endTime: string;
+  continuousStart: string | null;
+  continuousEnd: string | null;
+  perDateTimes: PerDateTimeEntry[] | null;
   fullName: string;
   phone: string;
   activityType: string;
@@ -34,6 +49,10 @@ export interface BookingRow {
   dates: string[];
   start_time: string;
   end_time: string;
+  booking_mode: string | null;
+  continuous_start: string | null;
+  continuous_end: string | null;
+  per_date_times: PerDateTimeEntry[] | null;
   full_name: string;
   phone: string;
   activity_type: string;
@@ -41,6 +60,8 @@ export interface BookingRow {
   notes: string | null;
   email: string | null;
   created_at: string;
+  approval_token: string;
+  approved_at: string | null;
 }
 
 export interface ApiErrorResponse {
@@ -50,11 +71,11 @@ export interface ApiErrorResponse {
 
 export interface ApiSuccessResponse {
   success: true;
-  /** True when `dryRun` was requested — nothing was saved or emailed. */
   dryRun?: boolean;
   message?: string;
   bookingId?: string;
   createdAt?: string;
-  /** False when the row was saved but Resend failed (check Edge Function logs). */
+  alreadySignedUp?: boolean;
+  updatedExisting?: boolean;
   emailSent?: boolean;
 }

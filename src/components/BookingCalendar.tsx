@@ -13,39 +13,29 @@ function parseKey(key: string): Date {
   return new Date(y, m - 1, day);
 }
 
-function getDaysInMonth(year: number, month: number): Date[] {
-  const first = new Date(year, month, 1);
-  const last = new Date(year, month + 1, 0);
-  const days: Date[] = [];
-  for (let d = 1; d <= last.getDate(); d++) {
-    days.push(new Date(year, month, d));
-  }
-  return days;
-}
-
 /** Week starts Monday. Returns 0–6. */
 function getDayOfWeek(d: Date): number {
   const n = d.getDay();
   return n === 0 ? 6 : n - 1;
 }
 
-/** All dates to show in the grid for one month (leading/trailing from prev/next month). */
-function getGridDays(year: number, month: number): (Date | null)[] {
+/** Month grid: only real days of `month`; leading/trailing slots are null (blank cells). */
+function getMonthGridCells(year: number, month: number): (Date | null)[] {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
   const startPad = getDayOfWeek(first);
-  const total = startPad + last.getDate();
+  const daysInMonth = last.getDate();
+  const total = startPad + daysInMonth;
   const rows = Math.ceil(total / 7);
   const size = rows * 7;
   const out: (Date | null)[] = [];
   for (let i = 0; i < size; i++) {
     if (i < startPad) {
-      const prevMonth = new Date(year, month, 1 - (startPad - i));
-      out.push(prevMonth);
-    } else if (i < startPad + last.getDate()) {
+      out.push(null);
+    } else if (i < startPad + daysInMonth) {
       out.push(new Date(year, month, i - startPad + 1));
     } else {
-      out.push(new Date(year, month + 1, i - startPad - last.getDate() + 1));
+      out.push(null);
     }
   }
   return out;
@@ -60,6 +50,8 @@ interface BookingCalendarProps {
   minDate?: string;
   /** Maximum selectable date (ISO string). */
   maxDate?: string;
+  /** Dates already reserved (YYYY-MM-DD) — shown greyed and not selectable. */
+  blockedDates?: ReadonlySet<string>;
 }
 
 export function BookingCalendar({
@@ -67,6 +59,7 @@ export function BookingCalendar({
   onChange,
   minDate,
   maxDate,
+  blockedDates,
 }: BookingCalendarProps) {
   const today = new Date();
   const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -75,15 +68,21 @@ export function BookingCalendar({
 
   const viewYear = viewDate.getFullYear();
   const viewMonth = viewDate.getMonth();
-  const gridDays = getGridDays(viewYear, viewMonth);
+  const gridCells = getMonthGridCells(viewYear, viewMonth);
+
+  const isBlocked = useCallback(
+    (key: string) => Boolean(blockedDates?.has(key)),
+    [blockedDates],
+  );
 
   const isDisabled = useCallback(
     (key: string) => {
       if (minDate && key < minDate) return true;
       if (maxDate && key > maxDate) return true;
+      if (blockedDates?.has(key)) return true;
       return false;
     },
-    [minDate, maxDate]
+    [minDate, maxDate, blockedDates],
   );
 
   const isInDragRange = useCallback(
@@ -137,27 +136,28 @@ export function BookingCalendar({
     [selectedDates, onChange, isDisabled]
   );
 
-  const handleMouseDown = (e: React.MouseEvent, key: string) => {
+  const handlePointerDown = (e: React.PointerEvent, key: string) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault();
     if (isDisabled(key)) return;
     setDragStart(key);
     setDragEnd(null);
   };
 
-  const handleMouseEnter = (key: string) => {
+  const handlePointerEnter = (key: string) => {
     if (dragStart !== null && !isDisabled(key)) {
       setDragEnd(key);
     }
   };
 
-  const handleMouseLeave = () => {
+  const handlePointerLeaveGrid = () => {
     if (dragStart !== null) {
       setDragEnd(null);
     }
   };
 
   useEffect(() => {
-    const onDocMouseUp = () => {
+    const onDocPointerUp = () => {
       if (dragStart !== null) {
         if (dragEnd !== null) {
           setSelectionFromRange(dragStart, dragEnd);
@@ -168,8 +168,8 @@ export function BookingCalendar({
         setDragEnd(null);
       }
     };
-    document.addEventListener('mouseup', onDocMouseUp);
-    return () => document.removeEventListener('mouseup', onDocMouseUp);
+    document.addEventListener('pointerup', onDocPointerUp);
+    return () => document.removeEventListener('pointerup', onDocPointerUp);
   }, [dragStart, dragEnd, setSelectionFromRange, toggleOne]);
 
   const goPrev = () => {
@@ -207,7 +207,7 @@ export function BookingCalendar({
       </div>
       <div
         className="grid grid-cols-7 gap-0.5 sm:gap-1"
-        onMouseLeave={handleMouseLeave}
+        onPointerLeave={handlePointerLeaveGrid}
         role="grid"
         aria-label={`Calendar ${monthLabel}`}
       >
@@ -219,29 +219,49 @@ export function BookingCalendar({
             {wd}
           </div>
         ))}
-        {gridDays.map((cell, i) => {
-          if (!cell) return <div key={i} />;
+        {gridCells.map((cell, i) => {
+          if (!cell) {
+            return (
+              <div
+                key={`empty-${viewYear}-${viewMonth}-${i}`}
+                className="w-8 h-8 sm:w-10 sm:h-10"
+                aria-hidden="true"
+              />
+            );
+          }
           const key = toKey(cell);
-          const disabled = isDisabled(key);
-          const inCurrentMonth = cell.getMonth() === viewMonth;
           const selected = isSelected(key);
+          const blocked = isBlocked(key);
+          const disabled = isDisabled(key);
           const inRange = isInDragRange(key);
           const highlighted = selected || (inRange && dragStart !== null);
+
+          const baseCell =
+            'w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base transition-colors';
+          let cellClass = `${baseCell} text-gray-900`;
+          if (highlighted) {
+            cellClass += ' bg-black text-white cursor-pointer';
+          } else if (blocked) {
+            cellClass += ' bg-gray-200 text-gray-500 cursor-not-allowed';
+          } else if (disabled) {
+            cellClass += ' opacity-50 cursor-not-allowed';
+          } else {
+            cellClass += ' cursor-pointer hover:bg-gray-200';
+          }
 
           return (
             <button
               key={key}
               type="button"
               disabled={disabled}
-              className={`
-                w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base transition-colors
-                ${!inCurrentMonth ? 'text-gray-300' : 'text-gray-900'}
-                ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                ${highlighted ? 'bg-black text-white' : 'hover:bg-gray-200'}
-              `}
-              onMouseDown={(e) => handleMouseDown(e, key)}
-              onMouseEnter={() => handleMouseEnter(key)}
-              aria-label={cell.toLocaleDateString()}
+              className={cellClass}
+              onPointerDown={(e) => handlePointerDown(e, key)}
+              onPointerEnter={() => handlePointerEnter(key)}
+              aria-label={
+                blocked
+                  ? `${cell.toLocaleDateString()} (unavailable)`
+                  : cell.toLocaleDateString()
+              }
               aria-selected={selected}
             >
               {cell.getDate()}
@@ -251,6 +271,7 @@ export function BookingCalendar({
       </div>
       <p className="text-xs text-gray-500 mt-2">
         Click dates to select one by one, or drag to select a range.
+        {blockedDates && blockedDates.size > 0 ? ' Grey days are already booked.' : ''}
       </p>
     </div>
   );

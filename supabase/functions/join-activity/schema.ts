@@ -8,7 +8,7 @@ export interface JoinActivityValidationResult {
 const joinActivitySchema = z.object({
   fullName: z.string().trim().min(2, "fullName is required").max(120, "fullName is too long"),
   phone: z.string().trim().max(30, "phone is too long").optional(),
-  email: z.string().trim().email("email must be valid").max(254, "email is too long").optional(),
+  email: z.string().trim().min(1, "email is required").email("email must be valid").max(254, "email is too long"),
   activities: z.array(z.string().trim().min(1)).min(1, "Select at least one activity"),
   futureActivities: z.string().trim().max(1000, "futureActivities is too long").optional(),
 });
@@ -25,7 +25,7 @@ export function validateJoinActivityPayload(payload: unknown): JoinActivityValid
     input: {
       fullName: value.fullName,
       phone: value.phone?.trim() || null,
-      email: value.email?.trim().toLowerCase() || null,
+      email: value.email.trim().toLowerCase(),
       activities: value.activities,
       futureActivities: value.futureActivities?.trim() || null,
     },

@@ -21,6 +21,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
   const [emailSent, setEmailSent] = useState(true);
   const [processingDots, setProcessingDots] = useState(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitInfo, setSubmitInfo] = useState<string | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SUCCESS_DURATION_MS = 4000;
 
@@ -53,9 +54,10 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
     e.preventDefault();
     if (isSubmitting) return;
     setSubmitError(null);
+    setSubmitInfo(null);
 
     if (selectedIds.size === 0) {
-      setSubmitError('Please select at least one activity.');
+      setSubmitError('Please make at least one selection.');
       return;
     }
     if (!fullName.trim()) {
@@ -105,8 +107,11 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
         return;
       }
 
-      const resp = data as { emailSent?: boolean };
+      const resp = data as { emailSent?: boolean; message?: string; alreadySignedUp?: boolean };
       setEmailSent(resp.emailSent !== false);
+      if (resp.alreadySignedUp && resp.message) {
+        setSubmitInfo(resp.message);
+      }
       setIsSuccess(true);
 
       setFullName('');
@@ -166,7 +171,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
               Join an Activity
             </h1>
             <p className="text-gray-600 text-sm sm:text-base mb-6">
-              Choose the activities you’d like to join and tell us your name. We’ll get back to you.
+              Choose the activities you’d like to join and tell us your name. Since these are recurring, we’ll get back to you with more information.
             </p>
 
             {submitError && (
@@ -177,11 +182,16 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                 {submitError}
               </div>
             )}
+            {submitInfo && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800" role="status">
+                {submitInfo}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-gray-900">
-                  Activities I’d like to join
+                  Activities I’d like to join <span className="text-gray-400 font-normal">(*)</span>
                 </legend>
                 <ul className="space-y-2">
                   {activities.map((activity) => (
@@ -205,7 +215,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="join-full-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
+                    Full Name <span className="text-gray-400 font-normal">(*)</span>
                   </label>
                   <input
                     id="join-full-name"
@@ -219,35 +229,38 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                 </div>
                 <div>
                   <label htmlFor="join-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
+                    Phone Number <span className="text-gray-400 font-normal">(*)</span>
                   </label>
                   <input
                     id="join-phone"
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    required
                     placeholder="Phone number"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"
                   />
                 </div>
                 <div>
                   <label htmlFor="join-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
+                    Email Address <span className="text-gray-400 font-normal">(*)</span>
                   </label>
                   <input
                     id="join-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                     placeholder="you@example.com"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Already signed up? Use the same email to update your request.</p>
                 </div>
               </div>
 
               <fieldset className="space-y-2">
                 <label htmlFor="join-future-activities" className="block text-sm font-semibold text-gray-900">
-                  What kind of activities would you like to see in the future?
+                  Do you have any future activity ideas? <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <textarea
                   id="join-future-activities"

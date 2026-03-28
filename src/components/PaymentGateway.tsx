@@ -24,6 +24,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
   const [wordsOfSupport, setWordsOfSupport] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const amount = (selectedAmount ?? parseFloat(customAmount)) || 0;
   const formValid =
@@ -56,8 +57,9 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
 
   const handleDonate = async () => {
     setError(null);
+    setInfo(null);
     if (!formValid) {
-      if (amount <= 0) setError('Please select or enter an amount.');
+      if (amount <= 0) setError('Please make at least one selection.');
       else if (!donorName && !isAnonymous) setError('Please enter your name or check Donate anonymously.');
       else if (!email.trim()) setError('Please enter your email address.');
       else if (!isValidEmail(email)) setError('Please enter a valid email address.');
@@ -94,13 +96,20 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
         throw new Error(data?.error || 'Failed to start payment');
       }
       if (data.payUrl) {
+        if (data?.alreadySignedUp && data?.message) {
+          setInfo(data.message);
+          setTimeout(() => {
+            window.location.href = data.payUrl;
+          }, 900);
+          return;
+        }
         window.location.href = data.payUrl;
       } else {
         throw new Error('No payment URL returned');
       }
     } catch (err) {
       setLoading(false);
-      setError(err instanceof Error ? err.message : 'Payment could not be started.');
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     }
   };
 
@@ -154,7 +163,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
         <div className="space-y-4 sm:space-y-6">
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
-              Donation Amount
+              Donation Amount <span className="text-gray-400 font-normal">(*)</span>
             </label>
             <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2 sm:mb-3">
               {PRESET_AMOUNTS.map((preset) => (
@@ -200,7 +209,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-              Your Name
+              Full Name
             </label>
             <input
               type="text"
@@ -224,7 +233,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-              Email Address <span className="text-red-500">*</span>
+              Email Address <span className="text-gray-400 font-normal">(*)</span>
             </label>
             <input
               type="email"
@@ -235,6 +244,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               style={{ fontSize: '16px' }}
               autoComplete="email"
             />
+            <p className="mt-1 text-xs text-gray-500">Already signed up? Use the same email to update your request.</p>
           </div>
 
           <div>
@@ -271,6 +281,11 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
           {error && (
             <p className="text-sm text-red-600" role="alert">
               {error}
+            </p>
+          )}
+          {info && (
+            <p className="text-sm text-blue-700" role="status">
+              {info}
             </p>
           )}
 

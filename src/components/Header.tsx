@@ -6,7 +6,7 @@ interface HeaderProps {
   onTabChange: (tab: string) => void;
   onGoHome?: () => void;
   onDonateNow?: () => void;
-  /** When provided, show black "Book now" button with calendar icon (e.g. on entry page) */
+  /** When provided, show black "Host now" button with calendar icon (e.g. on entry page) */
   onBookNow?: () => void;
   /** Optional: show \"Join Now\" button (e.g. on activities page) */
   onJoinNow?: () => void;
@@ -101,10 +101,10 @@ export function Header({ selectedTab, onTabChange, onGoHome, onDonateNow, onBook
               onClick={onBookNow}
               className="flex items-center gap-1.5 sm:gap-2 text-white font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105 active:scale-100"
               style={{ backgroundColor: '#d5a220' }}
-              aria-label="Book Now"
+              aria-label="Host Now"
             >
               <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white text-white" aria-hidden />
-              Book Now
+              Host Now
             </button>
           )}
           {onDonateNow && (

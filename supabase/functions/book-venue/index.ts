@@ -1,4 +1,4 @@
-import { insertBooking } from "./db.ts";
+import { upsertBookingByEmail } from "./db.ts";
 import { sendBookingEmails } from "./email.ts";
 import { validateBookVenuePayload, z } from "./schema.ts";
 import type { ApiErrorResponse, ApiSuccessResponse } from "./types.ts";
@@ -58,7 +58,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const booking = await insertBooking(validated.input);
+    const saveResult = await upsertBookingByEmail(validated.input);
+    const booking = saveResult.booking;
+    const message = saveResult.alreadySignedUp
+      ? "You're already signed up. We updated your previous request."
+      : undefined;
 
     try {
       await sendBookingEmails(booking);
@@ -69,6 +73,9 @@ Deno.serve(async (req: Request) => {
           success: true,
           bookingId: booking.id,
           createdAt: booking.created_at,
+          message,
+          alreadySignedUp: saveResult.alreadySignedUp,
+          updatedExisting: saveResult.updatedExisting,
           emailSent: false,
         },
         201,
@@ -80,6 +87,9 @@ Deno.serve(async (req: Request) => {
         success: true,
         bookingId: booking.id,
         createdAt: booking.created_at,
+        message,
+        alreadySignedUp: saveResult.alreadySignedUp,
+        updatedExisting: saveResult.updatedExisting,
         emailSent: true,
       },
       201,

@@ -65,6 +65,23 @@ export interface Database {
           created_at?: string;
         };
       };
+      venue_blocked_dates: {
+        Row: {
+          blocked_date: string;
+          booking_id: string;
+          created_at: string;
+        };
+        Insert: {
+          blocked_date: string;
+          booking_id: string;
+          created_at?: string;
+        };
+        Update: {
+          blocked_date?: string;
+          booking_id?: string;
+          created_at?: string;
+        };
+      };
     };
   };
 }

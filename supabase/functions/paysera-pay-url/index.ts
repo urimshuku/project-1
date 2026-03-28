@@ -77,6 +77,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Unique order reference for this donation (used in callback to match payment)
+    const normalizedEmail = String(email).trim().toLowerCase();
     const orderId = crypto.randomUUID();
     const callbackUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/paysera-callback`;
     const amountCents = Math.round(Number(amount) * 100);
@@ -95,7 +96,7 @@ Deno.serve(async (req: Request) => {
       callbackurl: callbackUrl,
       test,
       version,
-      p_email: String(email).trim().slice(0, 255),
+      p_email: normalizedEmail.slice(0, 255),
     };
 
     const query = new URLSearchParams(params).toString();
@@ -107,22 +108,52 @@ Deno.serve(async (req: Request) => {
     const sign = (md5 as (s: string) => string)(dataRaw + signPassword);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { error: insertError } = await supabase.from("pending_paysera_donations").insert({
+    const { data: existingRows, error: existingError } = await supabase
+      .from("pending_paysera_donations")
+      .select("order_id")
+      .ilike("email", normalizedEmail)
+      .eq("category_id", category_id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (existingError) {
+      console.error("Failed to check existing pending donation:", existingError);
+      throw new Error("Failed to check existing pending donation");
+    }
+
+    const existingOrder = existingRows?.[0]?.order_id as string | undefined;
+    const pendingPayload = {
       order_id: orderId,
       category_id,
       donor_name: body.is_anonymous ? "Anonymous" : donor_name,
-      email: String(email).trim().slice(0, 255) || null,
+      email: normalizedEmail.slice(0, 255) || null,
       amount: Number(amount),
       is_anonymous: Boolean(is_anonymous),
       words_of_support: words_of_support?.trim().slice(0, 150) || null,
-    });
-    if (insertError) {
-      console.error("Failed to store pending Paysera donation:", insertError);
-      throw new Error("Failed to store pending donation");
+    };
+
+    if (existingOrder) {
+      const { error: updateError } = await supabase
+        .from("pending_paysera_donations")
+        .update(pendingPayload)
+        .eq("order_id", existingOrder);
+      if (updateError) {
+        console.error("Failed to update pending Paysera donation:", updateError);
+        throw new Error("Failed to update pending donation");
+      }
+    } else {
+      const { error: insertError } = await supabase.from("pending_paysera_donations").insert(pendingPayload);
+      if (insertError) {
+        console.error("Failed to store pending Paysera donation:", insertError);
+        throw new Error("Failed to store pending donation");
+      }
     }
 
     const payUrl = `https://www.paysera.com/pay/?data=${encodeURIComponent(dataRaw)}&sign=${sign}`;
-    return new Response(JSON.stringify({ payUrl, orderId }), {
+    const message = existingOrder
+      ? "You're already signed up. We updated your previous request."
+      : undefined;
+    return new Response(JSON.stringify({ payUrl, orderId, alreadySignedUp: Boolean(existingOrder), updatedExisting: Boolean(existingOrder), message }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

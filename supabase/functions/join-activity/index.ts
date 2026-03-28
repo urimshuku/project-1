@@ -1,4 +1,4 @@
-import { insertActivityJoin } from "./db.ts";
+import { upsertActivityJoinByEmail } from "./db.ts";
 import { sendJoinEmails } from "./email.ts";
 import { validateJoinActivityPayload, z } from "./schema.ts";
 import type { ApiErrorResponse, ApiSuccessResponse } from "./types.ts";
@@ -45,7 +45,11 @@ Deno.serve(async (req: Request) => {
     const payload = await req.json();
     const validated = validateJoinActivityPayload(payload);
 
-    const joinRow = await insertActivityJoin(validated.input);
+    const saveResult = await upsertActivityJoinByEmail(validated.input);
+    const joinRow = saveResult.joinRow;
+    const message = saveResult.alreadySignedUp
+      ? "You're already signed up. We updated your previous request."
+      : undefined;
 
     try {
       await sendJoinEmails(joinRow);
@@ -56,6 +60,9 @@ Deno.serve(async (req: Request) => {
           success: true,
           joinId: joinRow.id,
           createdAt: joinRow.created_at,
+          message,
+          alreadySignedUp: saveResult.alreadySignedUp,
+          updatedExisting: saveResult.updatedExisting,
           emailSent: false,
         },
         201,
@@ -67,6 +74,9 @@ Deno.serve(async (req: Request) => {
         success: true,
         joinId: joinRow.id,
         createdAt: joinRow.created_at,
+        message,
+        alreadySignedUp: saveResult.alreadySignedUp,
+        updatedExisting: saveResult.updatedExisting,
         emailSent: true,
       },
       201,

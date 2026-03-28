@@ -1,7 +1,7 @@
 export interface JoinActivityRequestBody {
   fullName: string;
   phone?: string;
-  email?: string;
+  email: string;
   activities: string[];
   futureActivities?: string;
 }
@@ -9,7 +9,7 @@ export interface JoinActivityRequestBody {
 export interface ValidatedJoinActivityInput {
   fullName: string;
   phone: string | null;
-  email: string | null;
+  email: string;
   activities: string[];
   futureActivities: string | null;
 }
@@ -33,5 +33,8 @@ export interface ApiSuccessResponse {
   success: true;
   joinId?: string;
   createdAt?: string;
+  message?: string;
+  alreadySignedUp?: boolean;
+  updatedExisting?: boolean;
   emailSent?: boolean;
 }
