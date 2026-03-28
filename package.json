@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "deploy:fn:book-venue": "supabase functions deploy book-venue",
-    "deploy:fn:approve-booking": "supabase functions deploy approve-booking"
+    "deploy:fn:approve-booking": "supabase functions deploy approve-booking --no-verify-jwt"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
