@@ -162,9 +162,29 @@ a:hover .footer-link-underline::after {
   }
 }
 
-/* Booking time inputs: remove grey background on mobile (e.g. iOS Safari) */
+/* Booking time inputs */
 .booking-time-input {
   background-color: #fff !important;
+  font-variant-numeric: tabular-nums;
+}
+.booking-time-input select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-align-last: center;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.booking-time-sep {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
 }
 
 /* Entry page dots: canvas-based in EntryDotsCanvas; prefers-reduced-motion handled in JS */

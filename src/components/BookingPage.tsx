@@ -122,12 +122,95 @@ function formatTimeHm(value: string): string {
   if (!v) return '';
   const [h, m] = v.split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return v;
-  const d = new Date(2000, 0, 1, h, m);
-  return d.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES_60 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+function parseHm24(value: string): { h: string; m: string } | null {
+  const t = value.trim().slice(0, 5);
+  if (!/^\d{2}:\d{2}$/.test(t)) return null;
+  const [hs, ms] = t.split(':');
+  const hi = Number(hs);
+  const mi = Number(ms);
+  if (hi < 0 || hi > 23 || mi < 0 || mi > 59) return null;
+  return { h: hs, m: ms };
+}
+
+interface TimeInput24hProps {
+  id: string;
+  value: string;
+  onChange: (next: string) => void;
+  className?: string;
+  'aria-label': string;
+  /** compact = per-day row; comfortable = main start/end fields */
+  size?: 'compact' | 'comfortable';
+}
+
+function TimeInput24h({
+  id,
+  value,
+  onChange,
+  className,
+  'aria-label': ariaLabel,
+  size = 'comfortable',
+}: TimeInput24hProps) {
+  const parsed = parseHm24(value);
+  const hVal = parsed?.h ?? '';
+  const mVal = parsed?.m ?? '';
+  const isCompact = size === 'compact';
+  /* Match other booking inputs: px-3 py-2.5 (compact: tighter row in per-day table) */
+  const wrapperPad = isCompact ? 'px-1.5 py-1' : 'px-3 py-2.5';
+  const text = isCompact ? 'text-sm' : 'text-gray-900';
+
+  /* Centered `-- : --` idle layout; equal slot widths keep HH and MM balanced */
+  const slotW = isCompact ? 'w-[2.35rem]' : 'w-[2.65rem]';
+  const selectCls = `bg-transparent ${text} tabular-nums text-center ${slotW} shrink-0 outline-none border-none appearance-none cursor-pointer`;
+  /* compact: no w-full — full width stacks start/end on separate rows in per-day layout */
+  const widthCls = isCompact ? 'w-auto shrink-0' : 'w-full';
+
+  return (
+    <div
+      className={`booking-time-input flex items-center justify-center gap-x-1 ${widthCls} rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-gray-400 focus-within:border-gray-400 ${wrapperPad} ${className ?? ''}`}
+    >
+      <select
+        id={`${id}-h`}
+        aria-label={`${ariaLabel}, hour (24h)`}
+        className={selectCls}
+        value={hVal}
+        onChange={(e) => {
+          const nh = e.target.value;
+          if (!nh) { onChange(''); return; }
+          onChange(`${nh}:${mVal || '00'}`);
+        }}
+      >
+        <option value="">--</option>
+        {HOURS_24.map((h) => (
+          <option key={h} value={h}>{h}</option>
+        ))}
+      </select>
+      <span className={`booking-time-sep text-gray-900 select-none shrink-0 self-center ${text}`} aria-hidden>
+        :
+      </span>
+      <select
+        id={`${id}-m`}
+        aria-label={`${ariaLabel}, minutes`}
+        className={selectCls}
+        value={mVal}
+        onChange={(e) => {
+          const nm = e.target.value;
+          if (!nm) { onChange(''); return; }
+          onChange(`${hVal || '00'}:${nm}`);
+        }}
+      >
+        <option value="">--</option>
+        {MINUTES_60.map((m) => (
+          <option key={m} value={m}>{m}</option>
+        ))}
+      </select>
+    </div>
+  );
 }
 
 /** ISO date + HH:mm → datetime-local shape for API / preview */
@@ -694,36 +777,36 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                     {[...selectedDates].sort().map((d) => (
                       <div
                         key={d}
-                        className="flex items-center gap-2 px-3 py-2 min-w-0"
+                        className="flex flex-nowrap items-center gap-2 px-3 py-2 min-w-0"
                       >
                         <span className="text-sm font-medium text-gray-800 truncate shrink-0 w-[8.5rem]">
                           {formatIsoDateLong(d)}
                         </span>
-                        <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                          <input
-                            type="time"
+                        <div className="flex flex-nowrap items-center gap-1.5 ml-auto shrink-0">
+                          <TimeInput24h
+                            id={`booking-perday-${d}-start`}
+                            size="compact"
                             aria-label={`Start time ${d}`}
                             value={perDayTimes[d]?.start ?? ''}
-                            onChange={(e) =>
+                            onChange={(next) =>
                               setPerDayTimes((prev) => ({
                                 ...prev,
-                                [d]: { ...prev[d], start: e.target.value, end: prev[d]?.end ?? '' },
+                                [d]: { ...prev[d], start: next, end: prev[d]?.end ?? '' },
                               }))
                             }
-                            className="booking-time-input rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400 box-border w-[5.5rem]"
                           />
-                          <span className="text-gray-400 text-xs">–</span>
-                          <input
-                            type="time"
+                          <span className="text-gray-400 text-xs shrink-0">–</span>
+                          <TimeInput24h
+                            id={`booking-perday-${d}-end`}
+                            size="compact"
                             aria-label={`End time ${d}`}
                             value={perDayTimes[d]?.end ?? ''}
-                            onChange={(e) =>
+                            onChange={(next) =>
                               setPerDayTimes((prev) => ({
                                 ...prev,
-                                [d]: { ...prev[d], start: prev[d]?.start ?? '', end: e.target.value },
+                                [d]: { ...prev[d], start: prev[d]?.start ?? '', end: next },
                               }))
                             }
-                            className="booking-time-input rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400 box-border w-[5.5rem]"
                           />
                         </div>
                       </div>
@@ -734,29 +817,27 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-3 w-full min-w-0 max-w-full">
-                  <div className="w-1/2 sm:w-auto sm:flex-1 min-w-0 max-w-full">
-                    <label htmlFor="booking-start-time" className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="flex flex-row gap-3 w-full min-w-0 max-w-full">
+                  <div className="flex-1 min-w-0">
+                    <p id="booking-start-time-label" className="block text-sm font-medium text-gray-700 mb-1">
                       Start time (first day) <span className="text-gray-400 font-normal">(*)</span>
-                    </label>
-                    <input
+                    </p>
+                    <TimeInput24h
                       id="booking-start-time"
-                      type="time"
+                      aria-label="Start time (first day)"
                       value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="booking-time-input w-full max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400 box-border"
+                      onChange={setStartTime}
                     />
                   </div>
-                  <div className="w-1/2 sm:w-auto sm:flex-1 min-w-0 max-w-full">
-                    <label htmlFor="booking-end-time" className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <p id="booking-end-time-label" className="block text-sm font-medium text-gray-700 mb-1">
                       End time (last day) <span className="text-gray-400 font-normal">(*)</span>
-                    </label>
-                    <input
+                    </p>
+                    <TimeInput24h
                       id="booking-end-time"
-                      type="time"
+                      aria-label="End time (last day)"
                       value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className="booking-time-input w-full max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400 box-border"
+                      onChange={setEndTime}
                     />
                   </div>
                 </div>
