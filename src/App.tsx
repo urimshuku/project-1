@@ -25,6 +25,7 @@ type Page = 'entry' | 'home' | 'payment' | 'success' | 'cancel' | 'activities' |
 const TOP_LEVEL_APP_SEGMENTS = new Set([
   'venue',
   'activities',
+  'donate',
   'donations',
   'book',
   'join',
@@ -150,7 +151,8 @@ function getPageFromPathname(): Page {
   if (pathname.includes('/join')) return 'join';
   if (pathRel.includes('studio-space-activities') || segments.includes('activities')) return 'activities';
   if (pathRel.includes('studio-space-venue') || segments.includes('venue')) return 'venue';
-  if (pathname.includes('/donations')) return 'home';
+  if (segments.includes('donate') || segments.includes('donations') || pathname.includes('/donations'))
+    return 'home';
   if (isBase && params.get('donate')) return 'home';
   if (isBase) return 'entry';
   return 'home';
@@ -210,7 +212,7 @@ function App() {
   }, []);
 
   const baseFull = getBaseFull();
-  const donationsPath = `${baseFull}${baseFull === '/' ? '' : '/'}donations`;
+  const donatePath = `${baseFull}${baseFull === '/' ? '' : '/'}donate`;
   const activitiesPath = `${baseFull}${baseFull === '/' ? '' : '/'}activities`;
   const joinPath = `${baseFull}${baseFull === '/' ? '' : '/'}join`;
   const bookPath = `${baseFull}${baseFull === '/' ? '' : '/'}book`;
@@ -223,7 +225,7 @@ function App() {
   };
 
   const handleChooseDonations = () => {
-    window.history.pushState({}, '', donationsPath);
+    window.history.pushState({}, '', donatePath);
     setCurrentPage('home');
     window.scrollTo(0, 0);
   };
@@ -276,9 +278,9 @@ function App() {
     if (category) {
       setSelectedCategory(category);
       setCurrentPage('payment');
-      window.history.replaceState({}, '', donationsPath);
+      window.history.replaceState({}, '', donatePath);
     }
-  }, [loading, categories, donationsPath]);
+  }, [loading, categories, donatePath]);
 
   async function fetchCategories() {
     if (!supabase) return;
@@ -318,8 +320,8 @@ function App() {
   };
 
   const getShareUrl = (category: Category) => {
-    const base = `${window.location.origin}${import.meta.env.BASE_URL || '/'}`.replace(/\/$/, '');
-    return `${base}?donate=${encodeURIComponent(category.id)}`;
+    const origin = window.location.origin.replace(/\/$/, '');
+    return `${origin}${donatePath}?donate=${encodeURIComponent(category.id)}`;
   };
 
   const handleShare = async (e: React.MouseEvent, category: Category) => {
@@ -410,7 +412,9 @@ function App() {
   const specificCategories = displayCategories.filter((c) => c.name !== 'General Donations');
 
   const handleDonateNow = () => {
-    if (generalCategory) handleDonate(generalCategory);
+    if (!generalCategory) return;
+    window.history.pushState({}, '', donatePath);
+    handleDonate(generalCategory);
   };
 
   if (loading) {
