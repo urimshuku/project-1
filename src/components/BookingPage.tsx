@@ -5,6 +5,7 @@ import { BookingCalendar } from './BookingCalendar';
 import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import { supabase } from '../lib/supabase';
+import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
 
 interface BookingPageProps {
   /** Used for header logo and "Back to Home" link — navigates to venue page */
@@ -867,9 +868,9 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               </label>
               <input
                 id="booking-phone"
-                type="tel"
+                {...PHONE_INPUT_ATTRS}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                 required
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 placeholder="Phone number"

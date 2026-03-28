@@ -5,6 +5,7 @@ import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { ACTIVITIES } from '../lib/activitiesData';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import type { ActivitySection } from '../lib/activitiesData';
+import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
 
 interface JoinPageProps {
   onBackToActivities: () => void;
@@ -233,9 +234,9 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                   </label>
                   <input
                     id="join-phone"
-                    type="tel"
+                    {...PHONE_INPUT_ATTRS}
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                     required
                     placeholder="Phone number"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"
