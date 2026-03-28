@@ -147,11 +147,29 @@ function getPageFromPathname(): Page {
   const isSuccessPath = pathname.endsWith('success') || pathname.includes('/success');
   if (isSuccessPath && params.get('paysera')) return 'success';
   if (pathname.endsWith('cancel') || pathname.includes('/cancel')) return 'cancel';
-  if (pathname.includes('/book')) return 'booking';
-  if (pathname.includes('/join')) return 'join';
-  if (pathRel.includes('studio-space-activities') || segments.includes('activities')) return 'activities';
-  if (pathRel.includes('studio-space-venue') || segments.includes('venue')) return 'venue';
-  if (segments.includes('donate') || segments.includes('donations') || pathname.includes('/donations'))
+
+  if (
+    (segments[0] === 'venue' && segments[1] === 'book') ||
+    segments[0] === 'book' ||
+    pathRel.includes('/book')
+  )
+    return 'booking';
+  if (
+    (segments[0] === 'activities' && segments[1] === 'join') ||
+    segments[0] === 'join' ||
+    pathRel.includes('/join')
+  )
+    return 'join';
+
+  if (pathRel.includes('studio-space-activities') || segments[0] === 'activities') return 'activities';
+  if (pathRel.includes('studio-space-venue') || segments[0] === 'venue') return 'venue';
+
+  if (
+    (segments[0] === 'donations' && (segments.length === 1 || segments[1] === 'donate')) ||
+    segments[0] === 'donate' ||
+    pathRel === '/donations' ||
+    pathRel.startsWith('/donations/')
+  )
     return 'home';
   if (isBase && params.get('donate')) return 'home';
   if (isBase) return 'entry';
@@ -212,11 +230,12 @@ function App() {
   }, []);
 
   const baseFull = getBaseFull();
-  const donatePath = `${baseFull}${baseFull === '/' ? '' : '/'}donate`;
-  const activitiesPath = `${baseFull}${baseFull === '/' ? '' : '/'}activities`;
-  const joinPath = `${baseFull}${baseFull === '/' ? '' : '/'}join`;
-  const bookPath = `${baseFull}${baseFull === '/' ? '' : '/'}book`;
-  const venuePath = `${baseFull}${baseFull === '/' ? '' : '/'}venue`;
+  const sep = baseFull === '/' ? '' : '/';
+  const venuePath = `${baseFull}${sep}venue`;
+  const bookPath = `${venuePath}/book`;
+  const activitiesPath = `${baseFull}${sep}activities`;
+  const joinPath = `${activitiesPath}/join`;
+  const donatePath = `${baseFull}${sep}donations/donate`;
 
   const handleBookNow = () => {
     window.history.pushState({}, '', bookPath);
