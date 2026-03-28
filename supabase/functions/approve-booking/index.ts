@@ -227,8 +227,10 @@ Deno.serve(async (req: Request) => {
         400,
       );
     }
+    const postUrl = `${url.origin}${url.pathname}`;
+    const postUrlAttr = postUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
     const body = `<p>This will mark the booking as approved and block the requested dates on the public calendar.</p>
-<form method="post" action="">
+<form method="post" action="${postUrlAttr}" enctype="application/x-www-form-urlencoded">
   <input type="hidden" name="token" value="${token.replace(/"/g, "&quot;")}" />
   <button type="submit">Approve booking</button>
 </form>`;
@@ -237,18 +239,25 @@ Deno.serve(async (req: Request) => {
 
   if (req.method === "POST") {
     let token = "";
-    const ct = req.headers.get("content-type") ?? "";
-    if (ct.includes("application/x-www-form-urlencoded")) {
-      const text = await req.text();
-      const params = new URLSearchParams(text);
-      token = params.get("token")?.trim() ?? "";
-    } else {
-      try {
-        const j = await req.json() as { token?: string };
-        token = (j.token ?? "").trim();
-      } catch {
-        /* ignore */
+    const ct = (req.headers.get("content-type") ?? "").toLowerCase();
+    try {
+      if (ct.includes("multipart/form-data")) {
+        const fd = await req.formData();
+        const v = fd.get("token");
+        token = typeof v === "string" ? v.trim() : "";
+      } else {
+        const text = await req.text();
+        token = new URLSearchParams(text).get("token")?.trim() ?? "";
+        if (!token && text.trim().startsWith("{")) {
+          try {
+            token = String((JSON.parse(text) as { token?: string }).token ?? "").trim();
+          } catch {
+            /* ignore */
+          }
+        }
       }
+    } catch (e) {
+      console.error("approve-booking POST parse:", e);
     }
     if (!token || !uuidRe.test(token)) {
       return htmlResponse(

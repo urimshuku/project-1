@@ -226,6 +226,7 @@ function adminEmailDetailsBody(booking: BookingRow): string {
   return [
     `Booking ID: ${booking.id}`,
     `Created At: ${booking.created_at}`,
+    "",
     `Name: ${booking.full_name}`,
     `Phone: ${booking.phone}`,
     `Email: ${booking.email ?? "(not provided)"}`,
@@ -329,7 +330,9 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const userText = [
     `Hi ${booking.full_name},`,
     "",
-    "Thanks for your booking request. We received the details below:",
+    "Thanks for your booking request.",
+    "",
+    "We received the details below:",
     "",
     scheduleBlockUser(booking),
     "",
@@ -338,6 +341,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     "",
     "We will contact you shortly to confirm availability.",
     "",
+    "Warm regards,",
     "Studio Space",
   ].join("\n");
 
