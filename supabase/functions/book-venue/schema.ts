@@ -12,7 +12,7 @@ const dateTimeLocalRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const phoneRegex = /^[+\d()\-\s]{7,30}$/;
 
 function normalizeTimeToHHmm(t: string): string {
-  const m = t.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  const m = t.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/);
   if (!m) return t.trim();
   const h = Math.min(23, Math.max(0, parseInt(m[1], 10)));
   const min = m[2].padStart(2, "0").slice(0, 2);
@@ -171,8 +171,9 @@ export function validateBookVenuePayload(payload: unknown): BookVenueValidationR
   }
   const sortedDates = [...normalizedDates].sort();
 
+  // Per-day schedule must not require top-level startTime/endTime (checked below for shared-time mode).
   const perRaw = raw.perDateTimes;
-  if (perRaw && Array.isArray(perRaw) && perRaw.length > 0) {
+  if (Array.isArray(perRaw) && perRaw.length > 0) {
     const entries: PerDateTimeEntry[] = [];
     for (const row of perRaw) {
       const date = String((row as PerDateTimeEntry).date ?? "").trim();

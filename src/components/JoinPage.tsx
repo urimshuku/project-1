@@ -276,7 +276,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                 <button
                   type="submit"
                   disabled={isSubmitting || isSuccess}
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-white font-bold shadow-md min-h-[44px] disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4DA1A9] transition-colors duration-300 ease-out"
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto sm:min-w-[140px] px-4 py-2.5 rounded-lg text-white font-bold shadow-md min-h-[44px] disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4DA1A9] transition-colors duration-300 ease-out tabular-nums"
                   style={{ backgroundColor: isSuccess ? '#9ca3af' : '#4DA1A9' }}
                 >
                   {isSuccess
@@ -284,7 +284,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                       ? '✓ Sent'
                       : '✓ Saved (email failed)'
                     : isSubmitting
-                      ? `Processing${'.'.repeat(processingDots)}`
+                      ? '.'.repeat(processingDots)
                       : 'Send request'}
                 </button>
                 {isSuccess && !emailSent && (

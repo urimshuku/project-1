@@ -107,7 +107,14 @@ function formatIsoDateLong(iso: string): string {
 function formatDateTimeLocalPreview(s: string): string {
   const t = parseDateTimeLocal(s);
   if (t === null) return s.trim() || '—';
-  return new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  return new Date(t).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 function formatTimeHm(value: string): string {
@@ -116,7 +123,11 @@ function formatTimeHm(value: string): string {
   const [h, m] = v.split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return v;
   const d = new Date(2000, 0, 1, h, m);
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 /** ISO date + HH:mm → datetime-local shape for API / preview */
@@ -356,11 +367,19 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
         body: JSON.stringify(
-          asContinuous
+          // Per-day times must win over contiguous mode (same calendar selection can be both).
+          customPerDay
             ? {
-                bookingMode: 'continuous',
-                startDateTime: combineDateAndTime(sortedDates[0], startTime),
-                endDateTime: combineDateAndTime(sortedDates[sortedDates.length - 1], endTime),
+                bookingMode: 'non_continuous',
+                dates: sortedDates.length === 1 ? sortedDates[0] : sortedDates,
+                perDateTimes: sortedDates.map((d) => ({
+                  date: d,
+                  startTime: (perDayTimes[d]?.start || '10:00').slice(0, 5),
+                  endTime: (perDayTimes[d]?.end || '18:00').slice(0, 5),
+                })),
+                // Summary fields for any strict validators / logging (first day start, last day end).
+                startTime: (perDayTimes[sortedDates[0]]?.start || '10:00').slice(0, 5),
+                endTime: (perDayTimes[sortedDates[sortedDates.length - 1]]?.end || '18:00').slice(0, 5),
                 fullName: name.trim(),
                 phone: phone.trim(),
                 email: email.trim(),
@@ -369,15 +388,11 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 notes: additionalRequests.trim() || undefined,
                 website: websiteHoneypot.trim() || undefined,
               }
-            : customPerDay
+            : asContinuous
               ? {
-                  bookingMode: 'non_continuous',
-                  dates: sortedDates.length === 1 ? sortedDates[0] : sortedDates,
-                  perDateTimes: sortedDates.map((d) => ({
-                    date: d,
-                    startTime: (perDayTimes[d]?.start || '10:00').slice(0, 5),
-                    endTime: (perDayTimes[d]?.end || '18:00').slice(0, 5),
-                  })),
+                  bookingMode: 'continuous',
+                  startDateTime: combineDateAndTime(sortedDates[0], startTime),
+                  endDateTime: combineDateAndTime(sortedDates[sortedDates.length - 1], endTime),
                   fullName: name.trim(),
                   phone: phone.trim(),
                   email: email.trim(),
@@ -850,7 +865,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               <button
                 type="submit"
                 disabled={isSubmitting || isSuccess}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white shadow-md min-w-[140px] min-h-[44px] disabled:cursor-default transition-colors duration-300 ease-out"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white shadow-md min-w-[140px] min-h-[44px] disabled:cursor-default transition-colors duration-300 ease-out tabular-nums"
                 style={{ backgroundColor: isSuccess ? '#9ca3af' : '#d5a220' }}
               >
                 {isSuccess
@@ -858,7 +873,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                     ? '✓ Sent'
                     : '✓ Saved (email failed)'
                   : isSubmitting
-                    ? `Processing${'.'.repeat(processingDots)}`
+                    ? '.'.repeat(processingDots)
                     : 'Send request'}
               </button>
               {isSuccess && !emailSent && (
