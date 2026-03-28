@@ -175,27 +175,19 @@ function expandSelectionToAllCalendarDays(sortedIso: string[]): string[] {
   return Array.from(set).sort();
 }
 
-function formatIsoDateLong(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+/** Calendar day key YYYY-MM-DD → DD-MM-YYYY for summaries (matches booking emails). */
+function formatDdMmYyyyFromIso(iso: string): string {
+  const s = iso.trim().slice(0, 10);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
 }
 
-function formatDateTimeLocalPreview(s: string): string {
-  const t = parseDateTimeLocal(s);
-  if (t === null) return s.trim() || '—';
-  return new Date(t).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+function formatDdMmYyyyDateTimeFromParts(isoDate: string, hhmm: string): string {
+  const t = hhmm.trim().slice(0, 5);
+  const pad = t.length >= 5 && /^\d{2}:\d{2}$/.test(t) ? t : '';
+  if (!pad) return formatDdMmYyyyFromIso(isoDate);
+  return `${formatDdMmYyyyFromIso(isoDate)} ${pad}`;
 }
 
 function formatTimeHm(value: string): string {
@@ -301,24 +293,6 @@ function combineDateAndTime(isoDate: string, hhmm: string): string {
   return `${isoDate}T${pad}`;
 }
 
-/**
- * End clock time before start (e.g. 07:00 vs 09:00) with multiple days means one window from
- * first day @ start through last day @ end — not the same hours on every selected day.
- */
-function isFirstDayThroughLastDayWindow(
-  sortedIso: string[],
-  startHhmm: string,
-  endHhmm: string,
-): boolean {
-  if (sortedIso.length < 2) return false;
-  const st = startHhmm.trim().slice(0, 5);
-  const et = endHhmm.trim().slice(0, 5);
-  if (st < et) return false;
-  const t0 = parseDateTimeLocal(combineDateAndTime(sortedIso[0], st));
-  const t1 = parseDateTimeLocal(combineDateAndTime(sortedIso[sortedIso.length - 1], et));
-  return t0 !== null && t1 !== null && t1 > t0;
-}
-
 /** Shared start/end (not per-day): end after start on the clock ⇒ same hours on every selected day (not one long datetime span). */
 function isSameHoursEachDayShared(customPerDay: boolean, startTime: string, endTime: string): boolean {
   if (customPerDay) return false;
@@ -367,20 +341,6 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     () => isSameHoursEachDayShared(customPerDay, startTime, endTime),
     [customPerDay, startTime, endTime],
   );
-  /** One datetime window from first selected day @ start through last @ end (not “9–10 every day”). */
-  const showFirstToLastDatetimeWindow = useMemo(() => {
-    if (customPerDay || sortedSelectedDates.length < 2) return false;
-    if (!startTime.trim() || !endTime.trim()) return false;
-    if (sameHoursEachSelectedDay) return false;
-    const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
-    const edt = combineDateAndTime(
-      sortedSelectedDates[sortedSelectedDates.length - 1],
-      endTime,
-    );
-    const t0 = parseDateTimeLocal(sdt);
-    const t1 = parseDateTimeLocal(edt);
-    return t0 !== null && t1 !== null && t1 > t0;
-  }, [customPerDay, sortedSelectedDates, startTime, endTime, sameHoursEachSelectedDay]);
 
   useEffect(() => {
     return () => {
@@ -843,123 +803,114 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                             : 'Set times below';
                       return (
                         <li key={`preview-${d}`} className="text-sm">
-                          <span className="text-gray-900">{formatIsoDateLong(d)}</span>
+                          <span className="text-gray-900">{formatDdMmYyyyFromIso(d)}</span>
                           <span className="text-gray-400 mx-1.5">·</span>
                           <span className="text-gray-600">{timeLine}</span>
                         </li>
                       );
                     })}
                   </ul>
+                ) : sortedSelectedDates.length === 1 ? (
+                  <>
+                    <p className="text-gray-700">
+                      <span className="text-gray-500">1 day: </span>
+                      {formatDdMmYyyyFromIso(sortedSelectedDates[0])}
+                    </p>
+                    {(startTime.trim() || endTime.trim()) && (
+                      <div className="mt-2 pt-2 border-t border-gray-200 text-gray-700 text-sm space-y-1">
+                        {sameHoursEachSelectedDay ? (
+                          <p>
+                            <span className="text-gray-500">Hours: </span>
+                            <span className="text-gray-800">
+                              {formatTimeHm(startTime)}–{formatTimeHm(endTime)}
+                            </span>
+                          </p>
+                        ) : (
+                          <p>
+                            <span className="text-gray-500">Start: </span>
+                            {formatTimeHm(startTime) || '—'}
+                            <span className="text-gray-500"> · End: </span>
+                            {formatTimeHm(endTime) || '—'}
+                          </p>
+                        )}
+                        {(() => {
+                          const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
+                          const edt = combineDateAndTime(sortedSelectedDates[0], endTime);
+                          const t0 = parseDateTimeLocal(sdt);
+                          const t1 = parseDateTimeLocal(edt);
+                          if (
+                            startTime.trim() &&
+                            endTime.trim() &&
+                            t0 !== null &&
+                            t1 !== null &&
+                            t1 <= t0
+                          ) {
+                            return (
+                              <p className="text-amber-800 text-xs">End must be after start.</p>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <>
-                    {(() => {
-                      const runs = partitionContiguousRuns(sortedSelectedDates);
-
-                      if (runs.length === 1 && runs[0].length === 1) {
-                        return (
-                          <p className="text-gray-700">
-                            <span className="text-gray-500">1 day: </span>
-                            {formatIsoDateLong(runs[0][0])}
+                    <div className="space-y-1.5 text-gray-700 text-sm">
+                      <p className="text-gray-600 font-medium">Booking window and selected days:</p>
+                      {startTime.trim() && endTime.trim() ? (
+                        <>
+                          <p>
+                            <span className="text-gray-500">From: </span>
+                            <span className="text-gray-800">
+                              {formatDdMmYyyyDateTimeFromParts(sortedSelectedDates[0], startTime)}
+                            </span>
                           </p>
-                        );
-                      }
-
-                      const hasRange = runs.some((r) => r.length >= 2);
-                      const hasOrphans = runs.some((r) => r.length === 1);
-
-                      return (
-                        <div className="space-y-1">
-                          {runs.map((run, idx) => {
-                            const prev = idx > 0 ? runs[idx - 1] : null;
-                            const showDivider =
-                              hasOrphans &&
-                              hasRange &&
-                              run.length === 1 &&
-                              prev !== null &&
-                              prev.length >= 2;
-
-                            const line =
-                              run.length >= 2 ? (
-                                <p className="text-gray-700">
-                                  {formatIsoDateLong(run[0])} – {formatIsoDateLong(run[run.length - 1])}
-                                </p>
-                              ) : (
-                                <p className="text-gray-700">{formatIsoDateLong(run[0])}</p>
-                              );
-
-                            return (
-                              <div
-                                key={run.length >= 2 ? `${run[0]}_${run[run.length - 1]}` : run[0]}
-                                className={showDivider ? 'mt-2 pt-2 border-t border-gray-200' : undefined}
-                              >
-                                {line}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                    {
-                      (startTime.trim() || endTime.trim()) && (
-                        <div className="mt-2 pt-2 border-t border-gray-200 text-gray-700 text-sm space-y-1">
-                          {sameHoursEachSelectedDay ? (
-                            <>
-                              <p>
-                                <span className="text-gray-500">Same hours on each selected day: </span>
-                                <span className="text-gray-800">
-                                  {formatTimeHm(startTime)}–{formatTimeHm(endTime)}
-                                </span>
-                              </p>
-                            </>
-                          ) : (
-                            <p>
-                              <span className="text-gray-500">First day starts: </span>
-                              {formatTimeHm(startTime) || '—'}
-                              <span className="text-gray-500"> · Last day ends: </span>
-                              {formatTimeHm(endTime) || '—'}
-                            </p>
-                          )}
-                          {showFirstToLastDatetimeWindow &&
-                            (() => {
-                              const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
-                              const edt = combineDateAndTime(
+                          <p>
+                            <span className="text-gray-500">To: </span>
+                            <span className="text-gray-800">
+                              {formatDdMmYyyyDateTimeFromParts(
                                 sortedSelectedDates[sortedSelectedDates.length - 1],
                                 endTime,
-                              );
-                              const t0 = parseDateTimeLocal(sdt);
-                              const t1 = parseDateTimeLocal(edt);
-                              const gapNote =
-                                !calendarIsContiguous &&
-                                isFirstDayThroughLastDayWindow(
-                                  sortedSelectedDates,
-                                  startTime,
-                                  endTime,
-                                );
-                              if (t0 !== null && t1 !== null && t1 > t0) {
-                                return (
-                                  <p className="text-gray-600">
-                                    <span className="text-gray-500">Single time window: </span>
-                                    {formatDateTimeLocalPreview(sdt)} → {formatDateTimeLocalPreview(edt)}
-                                    {gapNote && (
-                                      <span className="text-gray-500">
-                                        {' '}
-                                        (start on first selected day, end on last; unselected days in between are not part
-                                        of this request)
-                                      </span>
-                                    )}
-                                  </p>
-                                );
-                              }
-                              if (t0 !== null && t1 !== null && t1 <= t0) {
-                                return (
-                                  <p className="text-amber-800 text-xs">End must be after start (check times and dates).</p>
-                                );
-                              }
-                              return null;
-                            })()}
-                        </div>
-                      )
-                    }
+                              )}
+                            </span>
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-gray-500 text-xs">Set start and end times below.</p>
+                      )}
+                      <p className="text-gray-600 pt-1">Selected calendar day(s) (may include gaps):</p>
+                      <p className="text-gray-800">
+                        {sortedSelectedDates.map((d) => formatDdMmYyyyFromIso(d)).join(', ')}
+                      </p>
+                    </div>
+                    {startTime.trim() &&
+                      endTime.trim() &&
+                      (() => {
+                        const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
+                        const edt = combineDateAndTime(
+                          sortedSelectedDates[sortedSelectedDates.length - 1],
+                          endTime,
+                        );
+                        const t0 = parseDateTimeLocal(sdt);
+                        const t1 = parseDateTimeLocal(edt);
+                        if (t0 !== null && t1 !== null && t1 <= t0) {
+                          return (
+                            <p className="text-amber-800 text-xs mt-2">
+                              End must be after start (check times and dates).
+                            </p>
+                          );
+                        }
+                        if (!calendarIsContiguous && t0 !== null && t1 !== null && t1 > t0) {
+                          return (
+                            <p className="text-gray-500 text-xs mt-2">
+                              Start on first selected day, end on last; unselected days in between are not part of this
+                              request.
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
                   </>
                 )}
               </div>
@@ -993,7 +944,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                         className="flex flex-nowrap items-center gap-2 px-3 py-2 min-w-0"
                       >
                         <span className="text-sm font-medium text-gray-800 truncate shrink-0 w-[8.5rem]">
-                          {formatIsoDateLong(d)}
+                          {formatDdMmYyyyFromIso(d)}
                         </span>
                         <div className="flex flex-nowrap items-center gap-1.5 ml-auto shrink-0">
                           <TimeInput24h

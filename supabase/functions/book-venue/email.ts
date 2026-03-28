@@ -43,35 +43,10 @@ function formatPerDateTimes(entries: PerDateTimeEntry[]): string {
     .join("\n");
 }
 
-/** Local "datetime-local" instant for comparisons (matches book-venue schema). */
-function dateTimeLocalToMs(s: string): number {
-  const [datePart, timePart] = s.trim().split("T");
-  const [y, m, d] = datePart.split("-").map(Number);
-  const [hh, mm] = timePart.split(":").map(Number);
-  return new Date(y, m - 1, d, hh, mm).getTime();
-}
-
-/**
- * When end clock time is before start (e.g. 07:00 vs 09:00), shared times mean
- * "start on the first selected day @ start, end on the last @ end" — not the same
- * hours repeated on every listed day.
- */
-function isFirstDayThroughLastDayWindow(
-  sortedDates: string[],
-  startHhmm: string,
-  endHhmm: string,
-): boolean {
-  if (sortedDates.length < 2) return false;
-  if (startHhmm < endHhmm) return false;
-  const startDt = `${sortedDates[0]}T${startHhmm}`;
-  const endDt = `${sortedDates[sortedDates.length - 1]}T${endHhmm}`;
-  return dateTimeLocalToMs(endDt) > dateTimeLocalToMs(startDt);
-}
-
 type NonContinuousScheduleKind =
   | "per_day_custom"
-  | "same_hours_each_day"
-  | "first_last_window"
+  | "shared_booking_window"
+  | "single_day_shared_times"
   | "empty";
 
 type NonContinuousEmailBody = {
@@ -105,7 +80,7 @@ function formatNonContinuousScheduleForEmail(
   const st = (startTime ?? "").trim().slice(0, 5);
   const et = (endTime ?? "").trim().slice(0, 5);
 
-  if (isFirstDayThroughLastDayWindow(sorted, st, et)) {
+  if (sorted.length >= 2) {
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
     return {
@@ -117,14 +92,14 @@ function formatNonContinuousScheduleForEmail(
         "Selected calendar day(s) (may include gaps):",
         sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", "),
       ].join("\n"),
-      kind: "first_last_window",
+      kind: "shared_booking_window",
     };
   }
 
   return {
-    detailHeader: "Dates & times (one row per day):",
-    body: sorted.map((d) => `${formatBookingDateDdMmYyyy(d)}: ${st}–${et}`).join("\n"),
-    kind: "same_hours_each_day",
+    detailHeader: "Date & time:",
+    body: `${formatBookingDateDdMmYyyy(sorted[0])}: ${st}–${et}`,
+    kind: "single_day_shared_times",
   };
 }
 
@@ -160,11 +135,13 @@ function scheduleBlockUser(booking: BookingRow): string {
     booking.end_time,
   );
   const userHeader =
-    kind === "first_last_window"
-      ? "Your requested window:"
-      : kind === "same_hours_each_day" || kind === "per_day_custom"
-        ? "Dates & times (each line is one day):"
-        : "Schedule:";
+    kind === "per_day_custom"
+      ? "Dates & times (each line is one day):"
+      : kind === "shared_booking_window"
+        ? "Booking window and selected days:"
+        : kind === "single_day_shared_times"
+          ? "Date & time:"
+          : "Schedule:";
   return [userHeader, body].filter(Boolean).join("\n");
 }
 
@@ -187,6 +164,81 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Label + value as separate nodes so clients don’t wrap “From:” inside date auto-links. */
+function labelValueLineHtml(label: string, value: string): string {
+  return `<p style="margin:0 0 0.35em 0;line-height:1.5;color:#374151"><strong style="color:#111;font-weight:600">${escapeHtml(label)}</strong> <span style="color:#374151">${escapeHtml(value)}</span></p>`;
+}
+
+function scheduleBlockHtml(booking: BookingRow): string {
+  const mode = booking.booking_mode ?? "non_continuous";
+  if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
+    const fromVal = formatBookingDateTimeDdMmYyyy(booking.continuous_start);
+    const toVal = formatBookingDateTimeDdMmYyyy(booking.continuous_end);
+    return [
+      labelValueLineHtml("From:", fromVal),
+      labelValueLineHtml("To:", toVal),
+      `<p style="margin:0;color:#6b7280;font-size:12px">(All hours from start through end are requested.)</p>`,
+    ].join("");
+  }
+
+  const per = normalizePerDateEntries(booking.per_date_times);
+  if (per && per.length > 0) {
+    const header =
+      `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Dates &amp; times (one row per day):</p>`;
+    const lines = formatPerDateTimes(per)
+      .split("\n")
+      .map((line) => `<p style="margin:0 0 0.15em 0;color:#374151">${escapeHtml(line)}</p>`)
+      .join("");
+    return header + lines;
+  }
+
+  const list = Array.isArray(booking.dates) ? booking.dates : [];
+  if (list.length === 0) {
+    return `<p style="margin:0;color:#6b7280">${escapeHtml("(No dates listed)")}</p>`;
+  }
+
+  const sorted = [...list].sort();
+  const st = (booking.start_time ?? "").trim().slice(0, 5);
+  const et = (booking.end_time ?? "").trim().slice(0, 5);
+
+  if (sorted.length >= 2) {
+    const first = formatBookingDateDdMmYyyy(sorted[0]);
+    const last = formatBookingDateDdMmYyyy(sorted[sorted.length - 1]);
+    const daysList = sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", ");
+    return [
+      `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Booking window and selected days:</p>`,
+      labelValueLineHtml("From:", `${first} ${st}`),
+      labelValueLineHtml("To:", `${last} ${et}`),
+      `<p style="margin:0.5em 0 0.25em 0;font-weight:600;color:#111">Selected calendar day(s) (may include gaps):</p>`,
+      `<p style="margin:0;color:#374151">${escapeHtml(daysList)}</p>`,
+    ].join("");
+  }
+
+  const oneLine = `${formatBookingDateDdMmYyyy(sorted[0])}: ${st}–${et}`;
+  return [
+    `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Date &amp; time:</p>`,
+    `<p style="margin:0;color:#374151">${escapeHtml(oneLine)}</p>`,
+  ].join("");
+}
+
+function adminEmailDetailsHtml(booking: BookingRow): string {
+  const kv = (label: string, value: string) => labelValueLineHtml(label, value);
+  return [
+    kv("Booking ID:", booking.id),
+    kv("Created At:", booking.created_at),
+    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
+    kv("Name:", booking.full_name),
+    kv("Phone:", booking.phone),
+    kv("Email:", booking.email ?? "(not provided)"),
+    kv("Activity:", booking.activity_type),
+    kv("Group Size:", String(booking.group_size)),
+    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
+    scheduleBlockHtml(booking),
+    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
+    kv("Notes:", booking.notes ?? "None"),
+  ].join("");
 }
 
 /** Resend REST API — avoids Node-only npm quirks in Deno Edge Functions. */
@@ -248,6 +300,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const approveUrl = token ? buildApproveBookingUrl(token) : "";
 
   const adminDetails = adminEmailDetailsBody(booking);
+  const adminDetailsHtml = adminEmailDetailsHtml(booking);
 
   const requestDetailsHeader = "Request details:\n\n";
 
@@ -297,7 +350,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 <body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
   <div style="max-width:40rem;margin:0 auto">
     <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151">Request details</p>
-    <pre style="white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0">${escapeHtml(adminDetails)}</pre>
+    <div style="font-size:13px;line-height:1.5;background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif">${adminDetailsHtml}</div>
     ${acceptActionHtml}
   </div>
 </body>
@@ -307,7 +360,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 <head><meta charset="utf-8" /></head>
 <body style="margin:0;padding:24px;font-family:system-ui,sans-serif">
   <p style="color:#b45309">No approval link could be generated for this booking.</p>
-  <pre style="white-space:pre-wrap;font-family:monospace;font-size:12px">${escapeHtml(adminDetails)}</pre>
+  <div style="font-size:13px;line-height:1.5;font-family:system-ui,sans-serif">${adminDetailsHtml}</div>
 </body>
 </html>`;
 
