@@ -318,6 +318,15 @@ function isFirstDayThroughLastDayWindow(
   return t0 !== null && t1 !== null && t1 > t0;
 }
 
+/** Shared start/end (not per-day): end after start on the clock ⇒ same hours on every selected day (not one long datetime span). */
+function isSameHoursEachDayShared(customPerDay: boolean, startTime: string, endTime: string): boolean {
+  if (customPerDay) return false;
+  const st = startTime.trim().slice(0, 5);
+  const et = endTime.trim().slice(0, 5);
+  if (!/^\d{2}:\d{2}$/.test(st) || !/^\d{2}:\d{2}$/.test(et)) return false;
+  return st < et;
+}
+
 /** Normalize DB date / timestamptz to YYYY-MM-DD for calendar keys. */
 function asIsoDateOnly(s: string): string {
   return s.slice(0, 10);
@@ -353,7 +362,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     () => sortedSelectedDates.length > 0 && areContiguousCalendarDays(sortedSelectedDates),
     [sortedSelectedDates],
   );
-  const submitAsContinuous = calendarIsContiguous && !customPerDay;
+  const sameHoursEachSelectedDay = useMemo(
+    () => isSameHoursEachDayShared(customPerDay, startTime, endTime),
+    [customPerDay, startTime, endTime],
+  );
+  /** One datetime window from first selected day @ start through last @ end (not “9–10 every day”). */
+  const showFirstToLastDatetimeWindow = useMemo(() => {
+    if (customPerDay || sortedSelectedDates.length < 2) return false;
+    if (!startTime.trim() || !endTime.trim()) return false;
+    if (sameHoursEachSelectedDay) return false;
+    const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
+    const edt = combineDateAndTime(
+      sortedSelectedDates[sortedSelectedDates.length - 1],
+      endTime,
+    );
+    const t0 = parseDateTimeLocal(sdt);
+    const t1 = parseDateTimeLocal(edt);
+    return t0 !== null && t1 !== null && t1 > t0;
+  }, [customPerDay, sortedSelectedDates, startTime, endTime, sameHoursEachSelectedDay]);
 
   useEffect(() => {
     return () => {
@@ -484,7 +510,22 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
 
     const sortedDates = [...selectedDates].sort();
     const contiguous = sortedDates.length > 0 && areContiguousCalendarDays(sortedDates);
-    const asContinuous = contiguous && !customPerDay;
+    const st = startTime.trim().slice(0, 5);
+    const et = endTime.trim().slice(0, 5);
+    const bothHhmm = /^\d{2}:\d{2}$/.test(st) && /^\d{2}:\d{2}$/.test(et);
+    const sameHoursDaily = !customPerDay && bothHhmm && st < et;
+    const asContinuous =
+      contiguous &&
+      !customPerDay &&
+      !sameHoursDaily &&
+      sortedDates.length >= 2 &&
+      (() => {
+        const startDateTime = combineDateAndTime(sortedDates[0], startTime);
+        const endDateTime = combineDateAndTime(sortedDates[sortedDates.length - 1], endTime);
+        const t0 = parseDateTimeLocal(startDateTime);
+        const t1 = parseDateTimeLocal(endDateTime);
+        return t0 !== null && t1 !== null && t1 > t0;
+      })();
 
     const err: BookingFieldErrors = {};
 
@@ -520,8 +561,6 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
           err.schedule = 'End date and time must be after start date and time.';
         }
       } else if (sortedDates.length >= 2) {
-        const st = startTime.trim().slice(0, 5);
-        const et = endTime.trim().slice(0, 5);
         if (st >= et) {
           const startDateTime = combineDateAndTime(sortedDates[0], startTime);
           const endDateTime = combineDateAndTime(sortedDates[sortedDates.length - 1], endTime);
@@ -860,22 +899,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                     {
                       (startTime.trim() || endTime.trim()) && (
                         <div className="mt-2 pt-2 border-t border-gray-200 text-gray-700 text-sm space-y-1">
-                          <p>
-                            <span className="text-gray-500">First day starts: </span>
-                            {formatTimeHm(startTime) || '—'}
-                            <span className="text-gray-500"> · Last day ends: </span>
-                            {formatTimeHm(endTime) || '—'}
-                          </p>
-                          {!customPerDay &&
-                            sortedSelectedDates.length >= 2 &&
-                            startTime.trim() &&
-                            endTime.trim() &&
-                            (submitAsContinuous ||
-                              isFirstDayThroughLastDayWindow(
-                                sortedSelectedDates,
-                                startTime,
-                                endTime,
-                              )) &&
+                          {sameHoursEachSelectedDay ? (
+                            <>
+                              <p>
+                                <span className="text-gray-500">Same hours on each selected day: </span>
+                                <span className="text-gray-800">
+                                  {formatTimeHm(startTime)}–{formatTimeHm(endTime)}
+                                </span>
+                              </p>
+                            </>
+                          ) : (
+                            <p>
+                              <span className="text-gray-500">First day starts: </span>
+                              {formatTimeHm(startTime) || '—'}
+                              <span className="text-gray-500"> · Last day ends: </span>
+                              {formatTimeHm(endTime) || '—'}
+                            </p>
+                          )}
+                          {showFirstToLastDatetimeWindow &&
                             (() => {
                               const sdt = combineDateAndTime(sortedSelectedDates[0], startTime);
                               const edt = combineDateAndTime(
@@ -884,18 +925,17 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                               );
                               const t0 = parseDateTimeLocal(sdt);
                               const t1 = parseDateTimeLocal(edt);
-                              const ok = t0 !== null && t1 !== null && t1 > t0;
-                              if (ok) {
-                                const gapNote =
-                                  !submitAsContinuous &&
-                                  isFirstDayThroughLastDayWindow(
-                                    sortedSelectedDates,
-                                    startTime,
-                                    endTime,
-                                  );
+                              const gapNote =
+                                !calendarIsContiguous &&
+                                isFirstDayThroughLastDayWindow(
+                                  sortedSelectedDates,
+                                  startTime,
+                                  endTime,
+                                );
+                              if (t0 !== null && t1 !== null && t1 > t0) {
                                 return (
                                   <p className="text-gray-600">
-                                    <span className="text-gray-500">Window: </span>
+                                    <span className="text-gray-500">Single time window: </span>
                                     {formatDateTimeLocalPreview(sdt)} → {formatDateTimeLocalPreview(edt)}
                                     {gapNote && (
                                       <span className="text-gray-500">

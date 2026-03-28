@@ -55,7 +55,6 @@ type NonContinuousScheduleKind =
   | "empty";
 
 type NonContinuousEmailBody = {
-  typeLine: string;
   detailHeader: string;
   body: string;
   kind: NonContinuousScheduleKind;
@@ -69,7 +68,6 @@ function formatNonContinuousScheduleForEmail(
 ): NonContinuousEmailBody {
   if (per && per.length > 0) {
     return {
-      typeLine: "Type: Non-continuous (custom time per day)",
       detailHeader: "Dates & times (one row per day):",
       body: formatPerDateTimes(per),
       kind: "per_day_custom",
@@ -78,7 +76,6 @@ function formatNonContinuousScheduleForEmail(
   const list = Array.isArray(dates) ? dates : [];
   if (list.length === 0) {
     return {
-      typeLine: "Type: Non-continuous",
       detailHeader: "",
       body: "(No dates listed)",
       kind: "empty",
@@ -92,8 +89,6 @@ function formatNonContinuousScheduleForEmail(
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
     return {
-      typeLine:
-        "Type: Non-continuous (one window: start on first selected day, end on last — not the same hours every day)",
       detailHeader: "Booking window and selected days:",
       body: [
         `From: ${first} ${st}`,
@@ -107,7 +102,6 @@ function formatNonContinuousScheduleForEmail(
   }
 
   return {
-    typeLine: "Type: Non-continuous (same hours on each listed day)",
     detailHeader: "Dates & times (one row per day):",
     body: sorted.map((d) => `${d}: ${st}–${et}`).join("\n"),
     kind: "same_hours_each_day",
@@ -118,26 +112,25 @@ function scheduleBlock(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
     return [
-      "Type: Continuous (single range)",
       `From: ${booking.continuous_start}`,
       `To:   ${booking.continuous_end}`,
       "(All hours from start through end are requested.)",
     ].join("\n");
   }
   const per = normalizePerDateEntries(booking.per_date_times);
-  const { typeLine, detailHeader, body } = formatNonContinuousScheduleForEmail(
+  const { detailHeader, body } = formatNonContinuousScheduleForEmail(
     booking.dates,
     per,
     booking.start_time,
     booking.end_time,
   );
-  return [typeLine, detailHeader, body].filter(Boolean).join("\n");
+  return [detailHeader, body].filter(Boolean).join("\n");
 }
 
 function scheduleBlockUser(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
-    return `When: ${booking.continuous_start} → ${booking.continuous_end} (continuous booking)`;
+    return `When: ${booking.continuous_start} → ${booking.continuous_end}`;
   }
   const per = normalizePerDateEntries(booking.per_date_times);
   const { kind, body } = formatNonContinuousScheduleForEmail(
@@ -152,7 +145,7 @@ function scheduleBlockUser(booking: BookingRow): string {
       : kind === "same_hours_each_day" || kind === "per_day_custom"
         ? "Dates & times (each line is one day):"
         : "Schedule:";
-  return `${userHeader}\n${body}`;
+  return [userHeader, body].filter(Boolean).join("\n");
 }
 
 function getAdminEmail(): string {
@@ -268,7 +261,6 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 <body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
   <div style="max-width:40rem;margin:0 auto">
     <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:20px 20px 18px;margin-bottom:20px">
-      <p style="margin:0 0 8px;font-size:17px;font-weight:700;color:#065f46">Accept this booking</p>
       <p style="margin:0 0 16px;font-size:14px;color:#374151">
         Confirm to <strong>block these dates on the public calendar</strong> so other people cannot book them.
       </p>
