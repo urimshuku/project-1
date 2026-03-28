@@ -21,6 +21,17 @@ import type { Category } from './lib/types';
 
 type Page = 'entry' | 'home' | 'payment' | 'success' | 'cancel' | 'activities' | 'booking' | 'venue' | 'join';
 
+/** First path segments that are real app routes, not GitHub Pages repo bases (e.g. /studio-space). */
+const TOP_LEVEL_APP_SEGMENTS = new Set([
+  'venue',
+  'activities',
+  'donations',
+  'book',
+  'join',
+  'success',
+  'cancel',
+]);
+
 // Default categories when Supabase returns none (used on first load or if DB is empty)
 const DEFAULT_CATEGORIES: Category[] = [
   {
@@ -102,7 +113,7 @@ function getBaseFull(): string {
   // derive base from the first path segment.
   if (baseFull === '/' && typeof window !== 'undefined') {
     const parts = window.location.pathname.split('/').filter(Boolean);
-    if (parts.length > 0) {
+    if (parts.length > 0 && !TOP_LEVEL_APP_SEGMENTS.has(parts[0])) {
       baseFull = `/${parts[0]}`;
     }
   }
@@ -110,11 +121,24 @@ function getBaseFull(): string {
   return baseFull;
 }
 
+/** Path after deployment base (e.g. /venue on custom domain, /studio-space/venue → /venue on GitHub Pages). */
+function pathRelativeToBase(pathname: string, baseFull: string): string {
+  if (baseFull === '/') return pathname;
+  if (pathname === baseFull || pathname === baseFull + '/') return '/';
+  if (pathname.startsWith(baseFull + '/')) {
+    const rel = pathname.slice(baseFull.length).replace(/\/$/, '') || '/';
+    return rel.startsWith('/') ? rel : `/${rel}`;
+  }
+  return pathname;
+}
+
 function getPageFromPathname(): Page {
   if (typeof window === 'undefined') return 'entry';
   const params = new URLSearchParams(window.location.search);
   const pathname = window.location.pathname.replace(/\/$/, '') || '/';
   const baseFull = getBaseFull();
+  const pathRel = pathRelativeToBase(pathname, baseFull);
+  const segments = pathRel.split('/').filter(Boolean);
   const isBase =
     pathname === baseFull ||
     pathname === baseFull + '/' ||
@@ -124,8 +148,8 @@ function getPageFromPathname(): Page {
   if (pathname.endsWith('cancel') || pathname.includes('/cancel')) return 'cancel';
   if (pathname.includes('/book')) return 'booking';
   if (pathname.includes('/join')) return 'join';
-  if (pathname.includes('studio-space-activities')) return 'activities';
-  if (pathname.includes('studio-space-venue')) return 'venue';
+  if (pathRel.includes('studio-space-activities') || segments.includes('activities')) return 'activities';
+  if (pathRel.includes('studio-space-venue') || segments.includes('venue')) return 'venue';
   if (pathname.includes('/donations')) return 'home';
   if (isBase && params.get('donate')) return 'home';
   if (isBase) return 'entry';
@@ -187,10 +211,10 @@ function App() {
 
   const baseFull = getBaseFull();
   const donationsPath = `${baseFull}${baseFull === '/' ? '' : '/'}donations`;
-  const activitiesPath = `${baseFull}${baseFull === '/' ? '' : '/'}studio-space-activities`;
+  const activitiesPath = `${baseFull}${baseFull === '/' ? '' : '/'}activities`;
   const joinPath = `${baseFull}${baseFull === '/' ? '' : '/'}join`;
   const bookPath = `${baseFull}${baseFull === '/' ? '' : '/'}book`;
-  const venuePath = `${baseFull}${baseFull === '/' ? '' : '/'}studio-space-venue`;
+  const venuePath = `${baseFull}${baseFull === '/' ? '' : '/'}venue`;
 
   const handleBookNow = () => {
     window.history.pushState({}, '', bookPath);
