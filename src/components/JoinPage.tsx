@@ -5,6 +5,7 @@ import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { ACTIVITIES } from '../lib/activitiesData';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import type { ActivitySection } from '../lib/activitiesData';
+import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
 
 interface JoinPageProps {
@@ -220,9 +221,9 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
                   </label>
                   <input
                     id="join-full-name"
-                    type="text"
+                    {...PERSON_NAME_INPUT_ATTRS}
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => setFullName(sanitizePersonNameInput(e.target.value))}
                     required
                     placeholder="Full name"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9]"

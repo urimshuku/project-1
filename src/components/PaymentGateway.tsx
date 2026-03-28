@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Category } from '../lib/types';
+import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 
 interface PaymentGatewayProps {
   category: Category;
@@ -212,9 +213,9 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               Full Name
             </label>
             <input
-              type="text"
+              {...PERSON_NAME_INPUT_ATTRS}
               value={donorName}
-              onChange={(e) => setDonorName(e.target.value)}
+              onChange={(e) => setDonorName(sanitizePersonNameInput(e.target.value))}
               disabled={isAnonymous}
               placeholder="Enter your name"
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"

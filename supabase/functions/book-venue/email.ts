@@ -1,5 +1,25 @@
 import type { BookingRow, PerDateTimeEntry } from "./types.ts";
 
+const isoYmdRe = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Display calendar dates in emails as DD-MM-YYYY (storage stays YYYY-MM-DD). */
+function formatBookingDateDdMmYyyy(isoYmd: string): string {
+  const s = isoYmd.trim().slice(0, 10);
+  const m = s.match(isoYmdRe);
+  if (!m) return s;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+/** `YYYY-MM-DDTHH:mm` → `DD-MM-YYYY HH:mm` */
+function formatBookingDateTimeDdMmYyyy(dateTimeLocal: string): string {
+  const t = dateTimeLocal.trim();
+  const i = t.indexOf("T");
+  if (i === -1) return formatBookingDateDdMmYyyy(t);
+  const datePart = t.slice(0, i);
+  const timePart = t.slice(i + 1, i + 6);
+  return `${formatBookingDateDdMmYyyy(datePart)} ${/^\d{2}:\d{2}$/.test(timePart) ? timePart : t.slice(i + 1)}`;
+}
+
 /** Supabase jsonb is usually an array; guard string / null for email formatting. */
 function normalizePerDateEntries(raw: unknown): PerDateTimeEntry[] | null {
   if (raw == null) return null;
@@ -19,7 +39,7 @@ function formatPerDateTimes(entries: PerDateTimeEntry[]): string {
   return entries
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((e) => `${e.date}: ${e.startTime}–${e.endTime}`)
+    .map((e) => `${formatBookingDateDdMmYyyy(e.date)}: ${e.startTime}–${e.endTime}`)
     .join("\n");
 }
 
@@ -91,11 +111,11 @@ function formatNonContinuousScheduleForEmail(
     return {
       detailHeader: "Booking window and selected days:",
       body: [
-        `From: ${first} ${st}`,
-        `To:   ${last} ${et}`,
+        `From: ${formatBookingDateDdMmYyyy(first)} ${st}`,
+        `To:   ${formatBookingDateDdMmYyyy(last)} ${et}`,
         "",
         "Selected calendar day(s) (may include gaps):",
-        sorted.join(", "),
+        sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", "),
       ].join("\n"),
       kind: "first_last_window",
     };
@@ -103,7 +123,7 @@ function formatNonContinuousScheduleForEmail(
 
   return {
     detailHeader: "Dates & times (one row per day):",
-    body: sorted.map((d) => `${d}: ${st}–${et}`).join("\n"),
+    body: sorted.map((d) => `${formatBookingDateDdMmYyyy(d)}: ${st}–${et}`).join("\n"),
     kind: "same_hours_each_day",
   };
 }
@@ -112,8 +132,8 @@ function scheduleBlock(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
     return [
-      `From: ${booking.continuous_start}`,
-      `To:   ${booking.continuous_end}`,
+      `From: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)}`,
+      `To:   ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`,
       "(All hours from start through end are requested.)",
     ].join("\n");
   }
@@ -130,7 +150,7 @@ function scheduleBlock(booking: BookingRow): string {
 function scheduleBlockUser(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
-    return `When: ${booking.continuous_start} → ${booking.continuous_end}`;
+    return `When: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)} → ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`;
   }
   const per = normalizePerDateEntries(booking.per_date_times);
   const { kind, body } = formatNonContinuousScheduleForEmail(
@@ -228,8 +248,11 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 
   const adminDetails = adminEmailDetailsBody(booking);
 
-  const acceptIntroText = approveUrl
+  const requestDetailsHeader = "Request details:\n\n";
+
+  const acceptFooterText = approveUrl
     ? [
+        "",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         "ACCEPT BOOKING — BLOCK DATES ON PUBLIC CALENDAR",
         "",
@@ -241,29 +264,20 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
         "",
         "(The extra step on the next page avoids accidental approval from email previews.)",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        "",
-        "Request details:",
-        "",
       ].join("\n")
+    : "";
+
+  const adminText = approveUrl
+    ? [requestDetailsHeader, adminDetails, acceptFooterText].join("")
     : [
         "WARNING: No approval token on this booking — accept link unavailable. Check DB migrations.",
         "",
-        "Request details:",
-        "",
+        requestDetailsHeader,
+        adminDetails,
       ].join("\n");
 
-  const adminText = [acceptIntroText, adminDetails].join("\n");
-
-  const adminHtml = approveUrl
-    ? `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
-  <div style="max-width:40rem;margin:0 auto">
-    <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:20px 20px 18px;margin-bottom:20px">
-      <p style="margin:0 0 16px;font-size:14px;color:#374151">
-        Confirm to <strong>block these dates on the public calendar</strong> so other people cannot book them.
-      </p>
+  const acceptActionHtml = approveUrl
+    ? `<div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:20px 20px 18px;margin-top:20px">
       <p style="margin:0 0 12px">
         <a href="${escapeHtml(approveUrl)}" style="display:inline-block;background:#047857;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
           Accept &amp; block calendar dates
@@ -272,9 +286,18 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
       <p style="margin:0;font-size:13px;color:#4b5563">
         Opens a secure page — click <strong>Approve booking</strong> there to finish (avoids accidental approval from inbox previews).
       </p>
-    </div>
+    </div>`
+    : "";
+
+  const adminHtml = approveUrl
+    ? `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
+  <div style="max-width:40rem;margin:0 auto">
     <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151">Request details</p>
     <pre style="white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0">${escapeHtml(adminDetails)}</pre>
+    ${acceptActionHtml}
   </div>
 </body>
 </html>`

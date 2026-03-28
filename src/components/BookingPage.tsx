@@ -5,6 +5,7 @@ import { BookingCalendar } from './BookingCalendar';
 import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import { supabase } from '../lib/supabase';
+import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
 
 interface BookingPageProps {
@@ -596,6 +597,8 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     const size = Number(groupSize);
     if (!groupSize.trim() || Number.isNaN(size) || size < 1) {
       err.groupSize = 'Please enter a valid group size (at least 1).';
+    } else if (size > 30) {
+      err.groupSize = 'Group size cannot exceed 30 people.';
     }
 
     if (!email.trim()) {
@@ -1086,10 +1089,10 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
               </label>
               <input
                 id="booking-name"
-                type="text"
+                {...PERSON_NAME_INPUT_ATTRS}
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setName(sanitizePersonNameInput(e.target.value));
                   setFieldErrors((prev) => {
                     if (!prev.fullName) return prev;
                     const { fullName: _f, ...rest } = prev;
@@ -1197,7 +1200,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                 id="booking-group-size"
                 type="number"
                 min={1}
-                max={2000}
+                max={30}
                 value={groupSize}
                 onChange={(e) => {
                   setGroupSize(e.target.value);

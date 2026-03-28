@@ -58,7 +58,7 @@ const baseFields = z.object({
     .number({ invalid_type_error: "groupSize must be a number" })
     .int("groupSize must be an integer")
     .min(1, "groupSize must be at least 1")
-    .max(2000, "groupSize is too large"),
+    .max(30, "groupSize must be at most 30"),
   notes: z.string().trim().max(1000, "notes is too long").optional(),
   email: z
     .string()
