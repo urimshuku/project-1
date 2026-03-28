@@ -9,7 +9,8 @@ export interface BookVenueValidationResult {
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const hhmmRegex = /^(?:[01]\d|2[0-3]|[0-9]):[0-5]\d$/;
 const dateTimeLocalRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-const phoneRegex = /^[+\d()\-\s]{7,30}$/;
+/* Allow `.` so values match frontend sanitizePhoneInput (e.g. 555.123.4567). */
+const phoneRegex = /^[+\d().\-\s]{7,30}$/;
 
 function normalizeTimeToHHmm(t: string): string {
   const m = t.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/);

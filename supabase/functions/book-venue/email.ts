@@ -25,7 +25,7 @@ function formatPerDateTimes(entries: PerDateTimeEntry[]): string {
 
 /** One line per calendar day so dates always pair with times in emails. */
 function formatDatesWithTimesLines(
-  dates: string[],
+  dates: string[] | null | undefined,
   per: PerDateTimeEntry[] | null,
   startTime: string,
   endTime: string,
@@ -33,7 +33,11 @@ function formatDatesWithTimesLines(
   if (per && per.length > 0) {
     return formatPerDateTimes(per);
   }
-  const sorted = [...dates].sort();
+  const list = Array.isArray(dates) ? dates : [];
+  if (list.length === 0) {
+    return "(No dates listed)";
+  }
+  const sorted = [...list].sort();
   return sorted.map((d) => `${d}: ${startTime}–${endTime}`).join("\n");
 }
 
