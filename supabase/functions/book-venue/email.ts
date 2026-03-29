@@ -91,7 +91,6 @@ function formatNonContinuousScheduleForEmail(
         `To: ${formatBookingDateDdMmYyyy(last)} ${et}`,
         "",
         "Selected calendar day(s) (may include gaps):",
-        "",
         sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", "),
       ].join("\n"),
       kind: "shared_booking_window",
@@ -110,7 +109,7 @@ function scheduleBlock(booking: BookingRow): string {
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
     return [
       `From: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)}`,
-      `To:   ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`,
+      `To: ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`,
       "(All hours from start through end are requested.)",
     ].join("\n");
   }
@@ -168,81 +167,9 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Label + value as separate nodes so clients don’t wrap “From:” inside date auto-links. */
-function labelValueLineHtml(
-  label: string,
-  value: string,
-  marginBottom = "0.35em",
-): string {
-  return `<p style="margin:0 0 ${marginBottom} 0;line-height:1.5;color:#374151"><strong style="color:#111;font-weight:600">${escapeHtml(label)}</strong> <span style="color:#374151">${escapeHtml(value)}</span></p>`;
-}
-
-function scheduleBlockHtml(booking: BookingRow): string {
-  const mode = booking.booking_mode ?? "non_continuous";
-  if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
-    const fromVal = formatBookingDateTimeDdMmYyyy(booking.continuous_start);
-    const toVal = formatBookingDateTimeDdMmYyyy(booking.continuous_end);
-    return [
-      labelValueLineHtml("From:", fromVal),
-      labelValueLineHtml("To:", toVal),
-      `<p style="margin:0;color:#6b7280;font-size:12px">(All hours from start through end are requested.)</p>`,
-    ].join("");
-  }
-
-  const per = normalizePerDateEntries(booking.per_date_times);
-  if (per && per.length > 0) {
-    const header =
-      `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Dates &amp; times (one row per day):</p>`;
-    const lines = formatPerDateTimes(per)
-      .split("\n")
-      .map((line) => `<p style="margin:0 0 0.15em 0;color:#374151">${escapeHtml(line)}</p>`)
-      .join("");
-    return header + lines;
-  }
-
-  const list = Array.isArray(booking.dates) ? booking.dates : [];
-  if (list.length === 0) {
-    return `<p style="margin:0;color:#6b7280">${escapeHtml("(No dates listed)")}</p>`;
-  }
-
-  const sorted = [...list].sort();
-  const st = (booking.start_time ?? "").trim().slice(0, 5);
-  const et = (booking.end_time ?? "").trim().slice(0, 5);
-
-  if (sorted.length >= 2) {
-    const first = formatBookingDateDdMmYyyy(sorted[0]);
-    const last = formatBookingDateDdMmYyyy(sorted[sorted.length - 1]);
-    const daysList = sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", ");
-    return [
-      `<p style="margin:0 0 12px 0;font-weight:600;color:#111">Booking window and selected days:</p>`,
-      labelValueLineHtml("From:", `${first} ${st}`, "4px"),
-      labelValueLineHtml("To:", `${last} ${et}`, "16px"),
-      `<p style="margin:0 0 8px 0;font-weight:600;color:#111">Selected calendar day(s) (may include gaps):</p>`,
-      `<p style="margin:0 0 16px 0;color:#374151">${escapeHtml(daysList)}</p>`,
-    ].join("");
-  }
-
-  const oneLine = `${formatBookingDateDdMmYyyy(sorted[0])}: ${st}–${et}`;
-  return [
-    `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Date &amp; time:</p>`,
-    `<p style="margin:0;color:#374151">${escapeHtml(oneLine)}</p>`,
-  ].join("");
-}
-
-function adminEmailDetailsHtml(booking: BookingRow): string {
-  const kv = (label: string, value: string, gap: "tight" | "section") =>
-    labelValueLineHtml(label, value, gap === "section" ? "16px" : "4px");
-  return [
-    kv("Booking ID:", booking.id, "tight"),
-    kv("Created At:", booking.created_at, "section"),
-    kv("Name:", booking.full_name, "tight"),
-    kv("Phone:", booking.phone, "tight"),
-    kv("Email:", booking.email ?? "(not provided)", "tight"),
-    kv("Activity:", booking.activity_type, "tight"),
-    kv("Group Size:", String(booking.group_size), "section"),
-    scheduleBlockHtml(booking),
-    kv("Notes:", booking.notes ?? "None", "tight"),
-  ].join("");
+/** Same layout as plain text; avoids &lt;p&gt; margins that look like double line breaks in clients. */
+function adminDetailsHtmlFromPlainText(plainBody: string): string {
+  return `<div style="margin:0;font-size:13px;line-height:1.45;color:#374151;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;white-space:pre-line">${escapeHtml(plainBody)}</div>`;
 }
 
 /** Resend REST API — avoids Node-only npm quirks in Deno Edge Functions. */
@@ -304,7 +231,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const approveUrl = token ? buildApproveBookingUrl(token) : "";
 
   const adminDetails = adminEmailDetailsBody(booking);
-  const adminDetailsHtml = adminEmailDetailsHtml(booking);
+  const adminDetailsHtml = adminDetailsHtmlFromPlainText(adminDetails);
 
   const requestDetailsHeader = "Request details\n\n";
 
@@ -354,7 +281,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 <body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
   <div style="max-width:40rem;margin:0 auto">
     <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151">Request details</p>
-    <div style="font-size:13px;line-height:1.5;background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif">${adminDetailsHtml}</div>
+    <div style="background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0">${adminDetailsHtml}</div>
     ${acceptActionHtml}
   </div>
 </body>
@@ -364,7 +291,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 <head><meta charset="utf-8" /></head>
 <body style="margin:0;padding:24px;font-family:system-ui,sans-serif">
   <p style="color:#b45309">No approval link could be generated for this booking.</p>
-  <div style="font-size:13px;line-height:1.5;font-family:system-ui,sans-serif">${adminDetailsHtml}</div>
+  <div style="font-size:13px;line-height:1.45;font-family:system-ui,sans-serif">${adminDetailsHtml}</div>
 </body>
 </html>`;
 

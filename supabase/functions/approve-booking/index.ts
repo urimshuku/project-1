@@ -95,8 +95,32 @@ function rawDatesToStrings(raw: unknown): string[] {
   return [];
 }
 
+/** Derive YYYY-MM-DD list from `per_date_times` jsonb when `dates` is empty or malformed. */
+function datesFromPerDateTimes(raw: unknown): string[] {
+  if (raw == null) return [];
+  let arr: unknown[] = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw) as unknown;
+      if (Array.isArray(p)) arr = p;
+    } catch {
+      return [];
+    }
+  } else return [];
+  const out: string[] = [];
+  for (const row of arr) {
+    if (row && typeof row === "object" && "date" in row) {
+      const d = String((row as { date?: string }).date ?? "").trim().slice(0, 10);
+      if (isoDateRe.test(d)) out.push(d);
+    }
+  }
+  return [...new Set(out)].sort();
+}
+
 function normalizeBlockedDateList(booking: {
   dates: unknown;
+  per_date_times: unknown;
   booking_mode: string | null;
   continuous_start: string | null;
   continuous_end: string | null;
@@ -110,6 +134,9 @@ function normalizeBlockedDateList(booking: {
   ].sort();
 
   if (fromDb.length > 0) return fromDb;
+
+  const fromPerDay = datesFromPerDateTimes(booking.per_date_times);
+  if (fromPerDay.length > 0) return fromPerDay;
 
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
@@ -128,7 +155,7 @@ async function runApprove(token: string): Promise<Response> {
 
   const { data: booking, error: fetchErr } = await supabase
     .from("bookings")
-    .select("id, dates, approved_at, booking_mode, continuous_start, continuous_end")
+    .select("id, dates, approved_at, booking_mode, continuous_start, continuous_end, per_date_times")
     .eq("approval_token", token)
     .maybeSingle();
 
@@ -172,12 +199,17 @@ async function runApprove(token: string): Promise<Response> {
     booking_id: booking.id,
   }));
 
-  const { error: blockErr } = await supabase.from("venue_blocked_dates").upsert(rows, {
-    onConflict: "blocked_date",
-  });
+  const { error: blockErr, data: blockedRows } = await supabase
+    .from("venue_blocked_dates")
+    .upsert(rows, { onConflict: "blocked_date" })
+    .select("blocked_date");
 
   if (blockErr) {
-    console.error("approve-booking blocks:", blockErr);
+    console.error("approve-booking blocks:", blockErr.message, blockErr.code, blockErr.details);
+    return htmlResponse(page("Error", "<p>Could not block the calendar dates. Try again later.</p>"), 500);
+  }
+  if (Array.isArray(blockedRows) && blockedRows.length === 0 && rows.length > 0) {
+    console.error("approve-booking: upsert returned empty", { bookingId: booking.id, rowCount: rows.length });
     return htmlResponse(page("Error", "<p>Could not block the calendar dates. Try again later.</p>"), 500);
   }
 
@@ -230,11 +262,51 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? url.origin).replace(/\/$/, "");
     const postUrl = `${supabaseUrl}/functions/v1/approve-booking`;
     const postUrlAttr = postUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    const tokenAttr = token.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    const postUrlJs = JSON.stringify(postUrl);
+    const tokenJs = JSON.stringify(token);
     const body = `<p>This will mark the booking as approved and block the requested dates on the public calendar.</p>
-<form method="post" action="${postUrlAttr}" enctype="application/x-www-form-urlencoded">
-  <input type="hidden" name="token" value="${token.replace(/"/g, "&quot;")}" />
-  <button type="submit">Approve booking</button>
-</form>`;
+<form id="approve-booking-form" method="post" action="${postUrlAttr}" enctype="application/x-www-form-urlencoded">
+  <input type="hidden" name="token" value="${tokenAttr}" />
+  <button type="submit" id="approve-booking-submit">Approve booking</button>
+</form>
+<p id="approve-booking-working" style="display:none;margin-top:1rem;color:#555;font-size:0.95rem" role="status">Working…</p>
+<script>
+(function () {
+  var form = document.getElementById("approve-booking-form");
+  var btn = document.getElementById("approve-booking-submit");
+  var busy = document.getElementById("approve-booking-working");
+  if (!form || !btn) return;
+  var POST_URL = ${postUrlJs};
+  var TOKEN = ${tokenJs};
+  form.addEventListener("submit", function (e) {
+    if (typeof fetch !== "function") return;
+    e.preventDefault();
+    btn.disabled = true;
+    if (busy) busy.style.display = "block";
+    fetch(POST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: TOKEN }).toString(),
+    })
+      .then(function (r) {
+        return r.text().then(function (t) {
+          return { ok: r.ok, t: t };
+        });
+      })
+      .then(function (x) {
+        document.open("text/html");
+        document.write(x.t);
+        document.close();
+      })
+      .catch(function () {
+        btn.disabled = false;
+        if (busy) busy.style.display = "none";
+        alert("Network error — submit the form again, or disable content blockers for this page.");
+      });
+  });
+})();
+</script>`;
     return htmlResponse(page("Approve booking?", body), 200);
   }
 

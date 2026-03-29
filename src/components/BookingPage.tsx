@@ -302,9 +302,14 @@ function isSameHoursEachDayShared(customPerDay: boolean, startTime: string, endT
   return st < et;
 }
 
-/** Normalize DB date / timestamptz to YYYY-MM-DD for calendar keys. */
+/** Normalize DB `date` / ISO string to YYYY-MM-DD for calendar keys. */
 function asIsoDateOnly(s: string): string {
-  return s.slice(0, 10);
+  if (s == null || typeof s !== 'string') return '';
+  const t = s.trim();
+  const head = t.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(head)) return head;
+  const m = t.match(/^(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1]! : head;
 }
 
 export function BookingPage({ onBackToEntry }: BookingPageProps) {
@@ -385,6 +390,24 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
     return () => {
       cancelled = true;
       void supabase.removeChannel(channel);
+    };
+  }, []);
+
+  /** Poll blocked dates — Realtime may be off; approval often happens in another tab. */
+  useEffect(() => {
+    if (!supabase) return;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled || document.visibilityState !== 'visible') return;
+      void supabase.from('venue_blocked_dates').select('blocked_date').then(({ data, error }) => {
+        if (cancelled || error) return;
+        setBlockedDateSet(new Set((data ?? []).map((r) => asIsoDateOnly(r.blocked_date))));
+      });
+    };
+    const id = window.setInterval(tick, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
     };
   }, []);
 
