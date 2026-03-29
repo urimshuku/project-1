@@ -68,7 +68,6 @@ const baseFields = z.object({
     .max(254, "email is too long"),
   website: z.string().optional(),
   dryRun: z.boolean().optional(),
-  recaptchaToken: z.string().optional(),
 });
 
 export function validateBookVenuePayload(payload: unknown): BookVenueValidationResult {

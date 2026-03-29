@@ -227,7 +227,8 @@ Deno.serve(async (req: Request) => {
         400,
       );
     }
-    const postUrl = `${url.origin}${url.pathname}`;
+    const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? url.origin).replace(/\/$/, "");
+    const postUrl = `${supabaseUrl}/functions/v1/approve-booking`;
     const postUrlAttr = postUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
     const body = `<p>This will mark the booking as approved and block the requested dates on the public calendar.</p>
 <form method="post" action="${postUrlAttr}" enctype="application/x-www-form-urlencoded">

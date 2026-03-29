@@ -24,7 +24,6 @@ export interface BookVenueRequestBody {
   email: string;
   website?: string;
   dryRun?: boolean;
-  recaptchaToken?: string;
 }
 
 export interface ValidatedBookVenueInput {

@@ -86,10 +86,12 @@ function formatNonContinuousScheduleForEmail(
     return {
       detailHeader: "Booking window and selected days:",
       body: [
+        "",
         `From: ${formatBookingDateDdMmYyyy(first)} ${st}`,
-        `To:   ${formatBookingDateDdMmYyyy(last)} ${et}`,
+        `To: ${formatBookingDateDdMmYyyy(last)} ${et}`,
         "",
         "Selected calendar day(s) (may include gaps):",
+        "",
         sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", "),
       ].join("\n"),
       kind: "shared_booking_window",
@@ -167,8 +169,12 @@ function escapeHtml(s: string): string {
 }
 
 /** Label + value as separate nodes so clients don’t wrap “From:” inside date auto-links. */
-function labelValueLineHtml(label: string, value: string): string {
-  return `<p style="margin:0 0 0.35em 0;line-height:1.5;color:#374151"><strong style="color:#111;font-weight:600">${escapeHtml(label)}</strong> <span style="color:#374151">${escapeHtml(value)}</span></p>`;
+function labelValueLineHtml(
+  label: string,
+  value: string,
+  marginBottom = "0.35em",
+): string {
+  return `<p style="margin:0 0 ${marginBottom} 0;line-height:1.5;color:#374151"><strong style="color:#111;font-weight:600">${escapeHtml(label)}</strong> <span style="color:#374151">${escapeHtml(value)}</span></p>`;
 }
 
 function scheduleBlockHtml(booking: BookingRow): string {
@@ -208,11 +214,11 @@ function scheduleBlockHtml(booking: BookingRow): string {
     const last = formatBookingDateDdMmYyyy(sorted[sorted.length - 1]);
     const daysList = sorted.map((d) => formatBookingDateDdMmYyyy(d)).join(", ");
     return [
-      `<p style="margin:0 0 0.35em 0;font-weight:600;color:#111">Booking window and selected days:</p>`,
-      labelValueLineHtml("From:", `${first} ${st}`),
-      labelValueLineHtml("To:", `${last} ${et}`),
-      `<p style="margin:0.5em 0 0.25em 0;font-weight:600;color:#111">Selected calendar day(s) (may include gaps):</p>`,
-      `<p style="margin:0;color:#374151">${escapeHtml(daysList)}</p>`,
+      `<p style="margin:0 0 12px 0;font-weight:600;color:#111">Booking window and selected days:</p>`,
+      labelValueLineHtml("From:", `${first} ${st}`, "4px"),
+      labelValueLineHtml("To:", `${last} ${et}`, "16px"),
+      `<p style="margin:0 0 8px 0;font-weight:600;color:#111">Selected calendar day(s) (may include gaps):</p>`,
+      `<p style="margin:0 0 16px 0;color:#374151">${escapeHtml(daysList)}</p>`,
     ].join("");
   }
 
@@ -224,20 +230,18 @@ function scheduleBlockHtml(booking: BookingRow): string {
 }
 
 function adminEmailDetailsHtml(booking: BookingRow): string {
-  const kv = (label: string, value: string) => labelValueLineHtml(label, value);
+  const kv = (label: string, value: string, gap: "tight" | "section") =>
+    labelValueLineHtml(label, value, gap === "section" ? "16px" : "4px");
   return [
-    kv("Booking ID:", booking.id),
-    kv("Created At:", booking.created_at),
-    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
-    kv("Name:", booking.full_name),
-    kv("Phone:", booking.phone),
-    kv("Email:", booking.email ?? "(not provided)"),
-    kv("Activity:", booking.activity_type),
-    kv("Group Size:", String(booking.group_size)),
-    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
+    kv("Booking ID:", booking.id, "tight"),
+    kv("Created At:", booking.created_at, "section"),
+    kv("Name:", booking.full_name, "tight"),
+    kv("Phone:", booking.phone, "tight"),
+    kv("Email:", booking.email ?? "(not provided)", "tight"),
+    kv("Activity:", booking.activity_type, "tight"),
+    kv("Group Size:", String(booking.group_size), "section"),
     scheduleBlockHtml(booking),
-    `<p style="margin:0;height:10px" aria-hidden="true"></p>`,
-    kv("Notes:", booking.notes ?? "None"),
+    kv("Notes:", booking.notes ?? "None", "tight"),
   ].join("");
 }
 
@@ -302,7 +306,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const adminDetails = adminEmailDetailsBody(booking);
   const adminDetailsHtml = adminEmailDetailsHtml(booking);
 
-  const requestDetailsHeader = "Request details:\n\n";
+  const requestDetailsHeader = "Request details\n\n";
 
   const acceptFooterText = approveUrl
     ? [

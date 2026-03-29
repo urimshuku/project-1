@@ -235,7 +235,10 @@ function App() {
   const bookPath = `${venuePath}/book`;
   const activitiesPath = `${baseFull}${sep}activities`;
   const joinPath = `${activitiesPath}/join`;
-  const donatePath = `${baseFull}${sep}donations/donate`;
+  /** Main “Support Our Studio Space Renovations” listing. */
+  const donationsPath = `${baseFull}${sep}donations`;
+  /** Quick general-donation flow (header “Donate now”). */
+  const donatePath = `${donationsPath}/donate`;
 
   const handleBookNow = () => {
     window.history.pushState({}, '', bookPath);
@@ -244,7 +247,7 @@ function App() {
   };
 
   const handleChooseDonations = () => {
-    window.history.pushState({}, '', donatePath);
+    window.history.pushState({}, '', donationsPath);
     setCurrentPage('home');
     window.scrollTo(0, 0);
   };
@@ -299,7 +302,7 @@ function App() {
       setCurrentPage('payment');
       window.history.replaceState({}, '', donatePath);
     }
-  }, [loading, categories, donatePath]);
+  }, [loading, categories, donatePath, donationsPath]);
 
   async function fetchCategories() {
     if (!supabase) return;
@@ -340,7 +343,7 @@ function App() {
 
   const getShareUrl = (category: Category) => {
     const origin = window.location.origin.replace(/\/$/, '');
-    return `${origin}${donatePath}?donate=${encodeURIComponent(category.id)}`;
+    return `${origin}${donationsPath}?donate=${encodeURIComponent(category.id)}`;
   };
 
   const handleShare = async (e: React.MouseEvent, category: Category) => {
