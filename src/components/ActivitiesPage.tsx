@@ -3,7 +3,6 @@ import { ACTIVITIES } from '../lib/activitiesData';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ScrollReveal } from './ScrollReveal';
-import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 
 interface ActivitiesPageProps {
@@ -19,7 +18,7 @@ export function ActivitiesPage({ onBackToEntry, onJoinNow }: ActivitiesPageProps
       <Header
         selectedTab="General Donations"
         onTabChange={() => {}}
-        onLogoClick={scrollToTopEaseOut}
+        onLogoClick={onBackToEntry}
         onJoinNow={onJoinNow}
         logoVariant="activities"
       />

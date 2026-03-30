@@ -16,7 +16,6 @@ import { ImageCarousel } from './components/ImageCarousel';
 import { ScrollReveal } from './components/ScrollReveal';
 import { Footer } from './components/Footer';
 import { supabase } from './lib/supabase';
-import { scrollToTopEaseOut } from './lib/scrollToTop';
 import type { Category } from './lib/types';
 
 type Page = 'entry' | 'home' | 'payment' | 'success' | 'cancel' | 'activities' | 'booking' | 'venue' | 'join';
@@ -466,7 +465,7 @@ function App() {
   }
 
   if (currentPage === 'join') {
-    return <JoinPage onBackToActivities={handleBackToActivities} />;
+    return <JoinPage onBackToActivities={handleBackToActivities} onLogoHome={handleBackToEntry} />;
   }
 
   if (currentPage === 'venue') {
@@ -474,7 +473,9 @@ function App() {
   }
 
   if (currentPage === 'booking') {
-    return <BookingPage onBackToEntry={handleBackToVenue} />;
+    return (
+      <BookingPage onBackToEntry={handleBackToVenue} onLogoHome={handleBackToEntry} />
+    );
   }
 
   if (currentPage === 'success') {
@@ -490,7 +491,7 @@ function App() {
       <div className="min-h-screen bg-gray-50 flex flex-col relative">
         <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
         <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={scrollToTopEaseOut} onDonateNow={handleDonateNow} />
+        <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} onDonateNow={handleDonateNow} />
         <div className="flex-1 pb-12 overflow-x-hidden">
           <div className="mt-4 sm:mt-6 md:mt-8 pt-2 sm:pt-4 px-3 sm:px-4">
             <PaymentGateway
@@ -521,7 +522,7 @@ function App() {
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
       <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
-      <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={scrollToTopEaseOut} onDonateNow={handleDonateNow} />
+      <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} onDonateNow={handleDonateNow} />
       <div className="flex-1">
       <div className="max-w-7xl mx-auto px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12">
         <button

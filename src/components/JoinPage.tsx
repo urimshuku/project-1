@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { ACTIVITIES } from '../lib/activitiesData';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import type { ActivitySection } from '../lib/activitiesData';
@@ -10,9 +9,10 @@ import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput
 
 interface JoinPageProps {
   onBackToActivities: () => void;
+  onLogoHome: () => void;
 }
 
-export function JoinPage({ onBackToActivities }: JoinPageProps) {
+export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -145,7 +145,7 @@ export function JoinPage({ onBackToActivities }: JoinPageProps) {
       <Header
         selectedTab="General Donations"
         onTabChange={() => {}}
-        onLogoClick={scrollToTopEaseOut}
+        onLogoClick={onLogoHome}
         logoVariant="activities"
       />
       <div className="flex-1 flex flex-col">

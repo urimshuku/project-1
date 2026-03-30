@@ -2,15 +2,16 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BookingCalendar } from './BookingCalendar';
-import { scrollToTopEaseOut } from '../lib/scrollToTop';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
 import { supabase } from '../lib/supabase';
 import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
 
 interface BookingPageProps {
-  /** Used for header logo and "Back to Home" link — navigates to venue page */
+  /** Back control — navigates to venue page */
   onBackToEntry: () => void;
+  /** Header logo — navigates to main entry / homepage */
+  onLogoHome: () => void;
 }
 
 function isValidEmail(email: string): boolean {
@@ -312,7 +313,7 @@ function asIsoDateOnly(s: string): string {
   return m ? m[1]! : head;
 }
 
-export function BookingPage({ onBackToEntry }: BookingPageProps) {
+export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [blockedDateSet, setBlockedDateSet] = useState<ReadonlySet<string>>(() => new Set());
   const [name, setName] = useState('');
@@ -721,7 +722,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
       <Header
         selectedTab="General Donations"
         onTabChange={() => {}}
-        onLogoClick={() => scrollToTopEaseOut(550)}
+        onLogoClick={onLogoHome}
         logoVariant="venue"
       />
       <div className="flex-1">
