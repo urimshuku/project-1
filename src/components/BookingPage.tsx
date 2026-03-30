@@ -788,7 +788,7 @@ export function BookingPage({ onBackToEntry }: BookingPageProps) {
                   the <span className="whitespace-nowrap">last</span> (for one day, both are that same day).
                 </p>
               </div>
-              <div className="flex justify-center">
+              <div className="mx-auto w-fit">
                 <BookingCalendar
                   selectedDates={selectedDates}
                   onChange={(next) => {

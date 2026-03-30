@@ -277,34 +277,26 @@ Deno.serve(async (req: Request) => {
   var btn = document.getElementById("approve-booking-submit");
   var busy = document.getElementById("approve-booking-working");
   if (!form || !btn) return;
-  var POST_URL = ${postUrlJs};
-  var TOKEN = ${tokenJs};
-  form.addEventListener("submit", function (e) {
-    if (typeof fetch !== "function") return;
-    e.preventDefault();
+  form.addEventListener("submit", function () {
     btn.disabled = true;
     if (busy) busy.style.display = "block";
-    fetch(POST_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ token: TOKEN }).toString(),
-    })
-      .then(function (r) {
-        return r.text().then(function (t) {
-          return { ok: r.ok, t: t };
-        });
-      })
-      .then(function (x) {
-        document.open("text/html");
-        document.write(x.t);
-        document.close();
-      })
-      .catch(function () {
-        btn.disabled = false;
-        if (busy) busy.style.display = "none";
-        alert("Network error — submit the form again, or disable content blockers for this page.");
-      });
   });
+
+  // Admins often click the email link and expect it to complete immediately.
+  // Auto-submit on load; if it fails, the button remains available for manual retry.
+  try {
+    setTimeout(function () {
+      if (btn.disabled) return;
+      // Prefer native submission so it still works even if JS fetch is blocked.
+      btn.disabled = true;
+      if (busy) busy.style.display = "block";
+      if (typeof form.submit === "function") form.submit();
+      else if (typeof form.requestSubmit === "function") form.requestSubmit();
+      else btn.click();
+    }, 400);
+  } catch {
+    /* ignore */
+  }
 })();
 </script>`;
     return htmlResponse(page("Approve booking?", body), 200);

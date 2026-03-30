@@ -86,7 +86,6 @@ function formatNonContinuousScheduleForEmail(
     return {
       detailHeader: "Booking window and selected days:",
       body: [
-        "",
         `From: ${formatBookingDateDdMmYyyy(first)} ${st}`,
         `To: ${formatBookingDateDdMmYyyy(last)} ${et}`,
         "",
