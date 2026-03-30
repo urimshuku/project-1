@@ -206,7 +206,7 @@ export function BookingCalendar({
         </button>
       </div>
       <div
-        className="grid grid-cols-7 gap-0.5 sm:gap-1"
+        className="grid grid-cols-7 justify-items-center gap-0.5 sm:gap-1"
         onPointerLeave={handlePointerLeaveGrid}
         role="grid"
         aria-label={`Calendar ${monthLabel}`}
