@@ -12,6 +12,8 @@ function escapeHtml(s: string): string {
 export interface EmailFooterLinks {
   html: string;
   text: string;
+  unsubscribeUrl: string;
+  preferencesUrl: string;
 }
 
 /** Legal / preference links for user-facing emails (omit if no token or no APP_URL). */
@@ -36,7 +38,7 @@ You can also <a href="${escapeHtml(prefsUrl)}" style="color:#4b5563;text-decorat
     `Email preferences: ${prefsUrl}`,
   ].join("\n");
 
-  return { html, text };
+  return { html, text, unsubscribeUrl, preferencesUrl: prefsUrl };
 }
 
 /** Skip user-facing transactional email when they opted out of all mail. */

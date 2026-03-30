@@ -1,6 +1,6 @@
 import { upsertUserMarketingOptIn } from "../_shared/upsertUserMarketingOptIn.ts";
 import { upsertBookingByEmail } from "./db.ts";
-import { sendBookingEmails } from "./email.ts";
+import { sendBookingEmails } from "./email.tsx";
 import { validateBookVenuePayload, z } from "./schema.ts";
 import type { ApiErrorResponse, ApiSuccessResponse } from "./types.ts";
 

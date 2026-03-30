@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export interface UserEmailRow {
+  id: string;
   email: string;
   marketing_opt_in: boolean;
   unsubscribed: boolean;
@@ -9,7 +10,7 @@ export interface UserEmailRow {
 }
 
 const USER_SELECT =
-  "email, marketing_opt_in, unsubscribed, unsubscribe_token, email_preferences";
+  "id, email, marketing_opt_in, unsubscribed, unsubscribe_token, email_preferences";
 
 export async function getUserByEmail(
   supabase: SupabaseClient,

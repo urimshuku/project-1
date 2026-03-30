@@ -1,6 +1,6 @@
 import { upsertUserMarketingOptIn } from "../_shared/upsertUserMarketingOptIn.ts";
 import { upsertActivityJoinByEmail } from "./db.ts";
-import { sendJoinEmails } from "./email.ts";
+import { sendJoinEmails } from "./email.tsx";
 import { validateJoinActivityPayload, z } from "./schema.ts";
 import type { ApiErrorResponse, ApiSuccessResponse } from "./types.ts";
 

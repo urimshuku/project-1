@@ -1,7 +1,26 @@
+import { render } from "npm:@react-email/render@2.0.4";
+import React from "npm:react@18.3.1";
+import BookingConfirmationEmail from "../../../emails/templates/BookingConfirmationEmail.tsx";
+import VenueBookingAdminEmail from "../../../emails/templates/VenueBookingAdminEmail.tsx";
 import type { BookingRow, PerDateTimeEntry } from "./types.ts";
+import {
+  applyEmailHtmlTracking,
+  createTrackingId,
+  insertEmailLog,
+} from "../_shared/emailTracking.ts";
 import { buildEmailFooterLinks, shouldSkipUserEmail } from "../_shared/emailFooter.ts";
 import { getUserByEmail } from "../_shared/usersDb.ts";
 import { getServiceRoleClient } from "../_shared/supabaseService.ts";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+
+function safeServiceClient(): SupabaseClient | null {
+  try {
+    return getServiceRoleClient();
+  } catch (e) {
+    console.warn("book-venue: Supabase client unavailable:", e);
+    return null;
+  }
+}
 
 const isoYmdRe = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -161,20 +180,6 @@ function buildApproveBookingUrl(approvalToken: string): string {
   return `${base}/functions/v1/approve-booking?token=${encodeURIComponent(approvalToken)}`;
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/** Same layout as plain text; avoids &lt;p&gt; margins that look like double line breaks in clients. */
-function adminDetailsHtmlFromPlainText(plainBody: string): string {
-  // Use <pre> so line breaks and blank lines are preserved consistently across email clients.
-  return `<pre style="margin:0;font-size:13px;line-height:1.45;color:#374151;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;white-space:pre-wrap">${escapeHtml(plainBody)}</pre>`;
-}
-
 /** Resend REST API — avoids Node-only npm quirks in Deno Edge Functions. */
 async function resendSend(params: {
   from: string;
@@ -234,7 +239,6 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const approveUrl = token ? buildApproveBookingUrl(token) : "";
 
   const adminDetails = adminEmailDetailsBody(booking);
-  const adminDetailsHtml = adminDetailsHtmlFromPlainText(adminDetails);
 
   const requestDetailsHeader = "Request details\n\n";
 
@@ -264,39 +268,26 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
         adminDetails,
       ].join("\n");
 
-  const acceptActionHtml = approveUrl
-    ? `<div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:20px 20px 18px;margin-top:20px">
-      <p style="margin:0 0 12px">
-        <a href="${escapeHtml(approveUrl)}" style="display:inline-block;background:#047857;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
-          Accept &amp; block calendar dates
-        </a>
-      </p>
-      <p style="margin:0;font-size:13px;color:#4b5563">
-        Opens a secure page — click <strong>Approve booking</strong> there to finish (avoids accidental approval from inbox previews).
-      </p>
-    </div>`
-    : "";
+  const adminHtml = await render(
+    <VenueBookingAdminEmail
+      detailsPlainText={adminDetails}
+      approveUrl={approveUrl || undefined}
+    />,
+    { pretty: false },
+  );
 
-  const adminHtml = approveUrl
-    ? `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
-  <div style="max-width:40rem;margin:0 auto">
-    <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151">Request details</p>
-    <div style="background:#fff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0">${adminDetailsHtml}</div>
-    ${acceptActionHtml}
-  </div>
-</body>
-</html>`
-    : `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:24px;font-family:system-ui,sans-serif">
-  <p style="color:#b45309">No approval link could be generated for this booking.</p>
-  <div style="font-size:13px;line-height:1.45;font-family:system-ui,sans-serif">${adminDetailsHtml}</div>
-</body>
-</html>`;
+  const supabase = safeServiceClient();
+
+  let adminHtmlOut = adminHtml;
+  if (supabase) {
+    const tid = createTrackingId();
+    const ok = await insertEmailLog(supabase, {
+      userId: null,
+      emailType: "booking_admin",
+      trackingId: tid,
+    });
+    if (ok) adminHtmlOut = applyEmailHtmlTracking(adminHtml, tid);
+  }
 
   console.log(`book-venue: sending admin email to ${adminEmail} from ${fromEmail}`);
   await resendSend({
@@ -304,7 +295,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     to: [adminEmail],
     subject: adminSubject,
     text: adminText,
-    html: adminHtml,
+    html: adminHtmlOut,
   });
   console.log("book-venue: admin email sent successfully");
 
@@ -314,11 +305,18 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   }
 
   let userRow = null;
-  try {
-    const supabase = getServiceRoleClient();
-    userRow = await getUserByEmail(supabase, booking.email);
-  } catch (e) {
-    console.warn("book-venue: could not load users row for email prefs:", e);
+  if (supabase) {
+    try {
+      userRow = await getUserByEmail(supabase, booking.email);
+    } catch (e) {
+      console.warn("book-venue: could not load users row for email prefs:", e);
+    }
+  } else {
+    try {
+      userRow = await getUserByEmail(getServiceRoleClient(), booking.email);
+    } catch (e) {
+      console.warn("book-venue: could not load users row for email prefs:", e);
+    }
   }
 
   if (shouldSkipUserEmail(userRow)) {
@@ -347,16 +345,29 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
 
   const footer = buildEmailFooterLinks(userRow?.unsubscribe_token ?? null);
   const userTextFull = footer ? `${userText}${footer.text}` : userText;
-  const userHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
-  <div style="max-width:40rem;margin:0 auto">
-    <pre style="margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;font-family:inherit;color:#374151">${escapeHtml(userText)}</pre>
-    ${footer?.html ?? ""}
-  </div>
-</body>
-</html>`;
+
+  const userHtml = await render(
+    <BookingConfirmationEmail
+      recipientName={booking.full_name}
+      scheduleBlock={scheduleBlockUser(booking)}
+      activityType={booking.activity_type}
+      groupSize={booking.group_size}
+      unsubscribeUrl={footer?.unsubscribeUrl}
+      preferencesUrl={footer?.preferencesUrl}
+    />,
+    { pretty: false },
+  );
+
+  let userHtmlOut = userHtml;
+  if (supabase) {
+    const tid = createTrackingId();
+    const ok = await insertEmailLog(supabase, {
+      userId: userRow?.id ?? null,
+      emailType: "booking_user",
+      trackingId: tid,
+    });
+    if (ok) userHtmlOut = applyEmailHtmlTracking(userHtml, tid);
+  }
 
   console.log(`book-venue: sending confirmation email to ${booking.email}`);
   await resendSend({
@@ -364,7 +375,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     to: [booking.email],
     subject: userSubject,
     text: userTextFull,
-    html: userHtml,
+    html: userHtmlOut,
   });
   console.log("book-venue: confirmation email sent successfully");
 }

@@ -1,14 +1,25 @@
+import { render } from "npm:@react-email/render@2.0.4";
+import React from "npm:react@18.3.1";
+import JoinActivityAdminEmail from "../../../emails/templates/JoinActivityAdminEmail.tsx";
+import JoinActivityConfirmationEmail from "../../../emails/templates/JoinActivityConfirmationEmail.tsx";
 import type { ActivityJoinRow } from "./types.ts";
+import {
+  applyEmailHtmlTracking,
+  createTrackingId,
+  insertEmailLog,
+} from "../_shared/emailTracking.ts";
 import { buildEmailFooterLinks, shouldSkipUserEmail } from "../_shared/emailFooter.ts";
 import { getUserByEmail } from "../_shared/usersDb.ts";
 import { getServiceRoleClient } from "../_shared/supabaseService.ts";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function safeServiceClient(): SupabaseClient | null {
+  try {
+    return getServiceRoleClient();
+  } catch (e) {
+    console.warn("join-activity: Supabase client unavailable:", e);
+    return null;
+  }
 }
 
 function getAdminEmail(): string {
@@ -70,12 +81,28 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
     `Future activity ideas: ${join.future_activities ?? "None"}`,
   ].join("\n");
 
+  const adminHtml = await render(<JoinActivityAdminEmail bodyPlainText={adminText} />, { pretty: false });
+
+  const supabase = safeServiceClient();
+
+  let adminHtmlOut = adminHtml;
+  if (supabase) {
+    const tid = createTrackingId();
+    const ok = await insertEmailLog(supabase, {
+      userId: null,
+      emailType: "join_admin",
+      trackingId: tid,
+    });
+    if (ok) adminHtmlOut = applyEmailHtmlTracking(adminHtml, tid);
+  }
+
   console.log(`join-activity: sending admin email to ${adminEmail} from ${fromEmail}`);
   await resendSend({
     from: fromEmail,
     to: [adminEmail],
     subject: adminSubject,
     text: adminText,
+    html: adminHtmlOut,
   });
   console.log("join-activity: admin email sent successfully");
 
@@ -85,11 +112,18 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   }
 
   let userRow = null;
-  try {
-    const supabase = getServiceRoleClient();
-    userRow = await getUserByEmail(supabase, join.email);
-  } catch (e) {
-    console.warn("join-activity: could not load users row for email prefs:", e);
+  if (supabase) {
+    try {
+      userRow = await getUserByEmail(supabase, join.email);
+    } catch (e) {
+      console.warn("join-activity: could not load users row for email prefs:", e);
+    }
+  } else {
+    try {
+      userRow = await getUserByEmail(getServiceRoleClient(), join.email);
+    } catch (e) {
+      console.warn("join-activity: could not load users row for email prefs:", e);
+    }
   }
 
   if (shouldSkipUserEmail(userRow)) {
@@ -114,16 +148,27 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
 
   const footer = buildEmailFooterLinks(userRow?.unsubscribe_token ?? null);
   const userTextFull = footer ? `${userText}${footer.text}` : userText;
-  const userHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
-  <div style="max-width:40rem;margin:0 auto">
-    <pre style="margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;font-family:inherit;color:#374151">${escapeHtml(userText)}</pre>
-    ${footer?.html ?? ""}
-  </div>
-</body>
-</html>`;
+
+  const userHtml = await render(
+    <JoinActivityConfirmationEmail
+      recipientName={join.full_name}
+      activitiesList={activitiesList}
+      unsubscribeUrl={footer?.unsubscribeUrl}
+      preferencesUrl={footer?.preferencesUrl}
+    />,
+    { pretty: false },
+  );
+
+  let userHtmlOut = userHtml;
+  if (supabase) {
+    const tid = createTrackingId();
+    const ok = await insertEmailLog(supabase, {
+      userId: userRow?.id ?? null,
+      emailType: "join_user",
+      trackingId: tid,
+    });
+    if (ok) userHtmlOut = applyEmailHtmlTracking(userHtml, tid);
+  }
 
   console.log(`join-activity: sending confirmation email to ${join.email}`);
   await resendSend({
@@ -131,7 +176,7 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
     to: [join.email],
     subject: userSubject,
     text: userTextFull,
-    html: userHtml,
+    html: userHtmlOut,
   });
   console.log("join-activity: confirmation email sent successfully");
 }
