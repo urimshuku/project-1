@@ -168,7 +168,8 @@ function escapeHtml(s: string): string {
 
 /** Same layout as plain text; avoids &lt;p&gt; margins that look like double line breaks in clients. */
 function adminDetailsHtmlFromPlainText(plainBody: string): string {
-  return `<div style="margin:0;font-size:13px;line-height:1.45;color:#374151;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;white-space:pre-line">${escapeHtml(plainBody)}</div>`;
+  // Use <pre> so line breaks and blank lines are preserved consistently across email clients.
+  return `<pre style="margin:0;font-size:13px;line-height:1.45;color:#374151;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;white-space:pre-wrap">${escapeHtml(plainBody)}</pre>`;
 }
 
 /** Resend REST API — avoids Node-only npm quirks in Deno Edge Functions. */

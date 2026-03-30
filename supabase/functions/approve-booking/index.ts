@@ -1,16 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
-
 function htmlResponse(html: string, status: number): Response {
   return new Response(html, {
     status,
     headers: {
-      ...corsHeaders,
+      "Access-Control-Allow-Origin": "*",
       "Content-Type": "text/html; charset=utf-8",
     },
   });
@@ -34,17 +28,9 @@ const page = (title: string, body: string) => `<!DOCTYPE html>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 3rem auto; padding: 0 1rem; color: #111; }
     h1 { font-size: 1.25rem; }
-    p, form { color: #444; line-height: 1.5; }
-    button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      cursor: pointer;
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-    }
+    p { color: #444; line-height: 1.5; }
+    .ok { color: #047857; }
+    .warn { color: #b45309; }
   </style>
 </head>
 <body>
@@ -72,7 +58,6 @@ function enumerateInclusiveDates(startIsoDate: string, endIsoDate: string): stri
   return out;
 }
 
-/** `bookings.dates` is text[]; PostgREST usually returns a JSON array, but normalize defensively. */
 function rawDatesToStrings(raw: unknown): string[] {
   if (Array.isArray(raw)) {
     return raw.map((x) => String(x).trim()).filter(Boolean);
@@ -95,7 +80,6 @@ function rawDatesToStrings(raw: unknown): string[] {
   return [];
 }
 
-/** Derive YYYY-MM-DD list from `per_date_times` jsonb when `dates` is empty or malformed. */
 function datesFromPerDateTimes(raw: unknown): string[] {
   if (raw == null) return [];
   let arr: unknown[] = [];
@@ -132,7 +116,6 @@ function normalizeBlockedDateList(booking: {
         .filter((d) => isoDateRe.test(d)),
     ),
   ].sort();
-
   if (fromDb.length > 0) return fromDb;
 
   const fromPerDay = datesFromPerDateTimes(booking.per_date_times);
@@ -177,8 +160,8 @@ async function runApprove(token: string): Promise<Response> {
   if (booking.approved_at) {
     return htmlResponse(
       page(
-        "Already approved",
-        "<p>This booking was already approved. Those dates stay blocked on the public calendar.</p>",
+        "Already approved &#10003;",
+        '<p class="ok">This booking was already approved. Those dates stay blocked on the public calendar.</p>',
       ),
       200,
     );
@@ -199,17 +182,12 @@ async function runApprove(token: string): Promise<Response> {
     booking_id: booking.id,
   }));
 
-  const { error: blockErr, data: blockedRows } = await supabase
+  const { error: blockErr } = await supabase
     .from("venue_blocked_dates")
-    .upsert(rows, { onConflict: "blocked_date" })
-    .select("blocked_date");
+    .upsert(rows, { onConflict: "blocked_date" });
 
   if (blockErr) {
     console.error("approve-booking blocks:", blockErr.message, blockErr.code, blockErr.details);
-    return htmlResponse(page("Error", "<p>Could not block the calendar dates. Try again later.</p>"), 500);
-  }
-  if (Array.isArray(blockedRows) && blockedRows.length === 0 && rows.length > 0) {
-    console.error("approve-booking: upsert returned empty", { bookingId: booking.id, rowCount: rows.length });
     return htmlResponse(page("Error", "<p>Could not block the calendar dates. Try again later.</p>"), 500);
   }
 
@@ -229,8 +207,9 @@ async function runApprove(token: string): Promise<Response> {
 
   return htmlResponse(
     page(
-      "Booking approved",
-      "<p>Thank you. These dates are now unavailable on the public Host an Activity calendar.</p>",
+      "Booking approved &#10003;",
+      `<p class="ok">Done. The following dates are now blocked on the public Host an Activity calendar:</p>
+       <p><strong>${blockDates.join(", ")}</strong></p>`,
     ),
     200,
   );
@@ -238,7 +217,7 @@ async function runApprove(token: string): Promise<Response> {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 
   const url = new URL(req.url);
@@ -248,95 +227,21 @@ Deno.serve(async (req: Request) => {
     return htmlResponse(page("Not found", "<p>This link is not valid.</p>"), 404);
   }
 
-  if (req.method === "GET") {
-    const token = url.searchParams.get("token")?.trim();
-    if (!token || !uuidRe.test(token)) {
-      return htmlResponse(
-        page(
-          "Invalid link",
-          "<p>The approval link is missing a valid token. Use the link from your admin email.</p>",
-        ),
-        400,
-      );
-    }
-    const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? url.origin).replace(/\/$/, "");
-    const postUrl = `${supabaseUrl}/functions/v1/approve-booking`;
-    const postUrlAttr = postUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-    const tokenAttr = token.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-    const postUrlJs = JSON.stringify(postUrl);
-    const tokenJs = JSON.stringify(token);
-    const body = `<p>This will mark the booking as approved and block the requested dates on the public calendar.</p>
-<form id="approve-booking-form" method="post" action="${postUrlAttr}" enctype="application/x-www-form-urlencoded">
-  <input type="hidden" name="token" value="${tokenAttr}" />
-  <button type="submit" id="approve-booking-submit">Approve booking</button>
-</form>
-<p id="approve-booking-working" style="display:none;margin-top:1rem;color:#555;font-size:0.95rem" role="status">Working…</p>
-<script>
-(function () {
-  var form = document.getElementById("approve-booking-form");
-  var btn = document.getElementById("approve-booking-submit");
-  var busy = document.getElementById("approve-booking-working");
-  if (!form || !btn) return;
-  form.addEventListener("submit", function () {
-    btn.disabled = true;
-    if (busy) busy.style.display = "block";
-  });
+  const token = url.searchParams.get("token")?.trim();
+  if (!token || !uuidRe.test(token)) {
+    return htmlResponse(
+      page(
+        "Invalid link",
+        "<p>The approval link is missing a valid token. Use the link from your admin email.</p>",
+      ),
+      400,
+    );
+  }
 
-  // Admins often click the email link and expect it to complete immediately.
-  // Auto-submit on load; if it fails, the button remains available for manual retry.
   try {
-    setTimeout(function () {
-      if (btn.disabled) return;
-      // Prefer native submission so it still works even if JS fetch is blocked.
-      btn.disabled = true;
-      if (busy) busy.style.display = "block";
-      if (typeof form.submit === "function") form.submit();
-      else if (typeof form.requestSubmit === "function") form.requestSubmit();
-      else btn.click();
-    }, 400);
-  } catch {
-    /* ignore */
+    return await runApprove(token);
+  } catch (e) {
+    console.error("approve-booking:", e);
+    return htmlResponse(page("Error", "<p>Something went wrong. Try again later.</p>"), 500);
   }
-})();
-</script>`;
-    return htmlResponse(page("Approve booking?", body), 200);
-  }
-
-  if (req.method === "POST") {
-    let token = "";
-    const ct = (req.headers.get("content-type") ?? "").toLowerCase();
-    try {
-      if (ct.includes("multipart/form-data")) {
-        const fd = await req.formData();
-        const v = fd.get("token");
-        token = typeof v === "string" ? v.trim() : "";
-      } else {
-        const text = await req.text();
-        token = new URLSearchParams(text).get("token")?.trim() ?? "";
-        if (!token && text.trim().startsWith("{")) {
-          try {
-            token = String((JSON.parse(text) as { token?: string }).token ?? "").trim();
-          } catch {
-            /* ignore */
-          }
-        }
-      }
-    } catch (e) {
-      console.error("approve-booking POST parse:", e);
-    }
-    if (!token || !uuidRe.test(token)) {
-      return htmlResponse(
-        page("Invalid request", "<p>Missing or invalid token. Open the link from your email again.</p>"),
-        400,
-      );
-    }
-    try {
-      return await runApprove(token);
-    } catch (e) {
-      console.error("approve-booking:", e);
-      return htmlResponse(page("Error", "<p>Something went wrong. Try again later.</p>"), 500);
-    }
-  }
-
-  return htmlResponse(page("Method not allowed", "<p>Open the approve link from your email in a browser.</p>"), 405);
 });
