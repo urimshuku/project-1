@@ -49,6 +49,7 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
     "",
     `Join ID: ${join.id}`,
     `Created At: ${join.created_at}`,
+    "",
     `Name: ${join.full_name}`,
     `Phone: ${join.phone ?? "(not provided)"}`,
     `Email: ${join.email ?? "(not provided)"}`,
@@ -74,11 +75,14 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   const userText = [
     `Hi ${join.full_name},`,
     "",
-    "Thanks for your interest in joining! We received the details below:",
-    `Activities: ${activitiesList}`,
+    "Thank you for your interest in joining in Studio Space Activities!",
     "",
-    "We will be in touch soon with more information.",
+    "We received the details below:",
+    `Activities selected: ${activitiesList}`,
     "",
+    "We will be in touch with you soon with more information.",
+    "",
+    "Warm regards,",
     "Studio Space",
   ].join("\n");
 
