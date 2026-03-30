@@ -10,6 +10,8 @@ import { ActivitiesPage } from './components/ActivitiesPage';
 import { BookingPage } from './components/BookingPage';
 import { VenuePage } from './components/VenuePage';
 import { JoinPage } from './components/JoinPage';
+import { UnsubscribePage } from './components/UnsubscribePage';
+import { EmailPreferencesPage } from './components/EmailPreferencesPage';
 import { AllDonors } from './components/AllDonors';
 import { WordsOfSupport } from './components/WordsOfSupport';
 import { ImageCarousel } from './components/ImageCarousel';
@@ -30,6 +32,8 @@ const TOP_LEVEL_APP_SEGMENTS = new Set([
   'join',
   'success',
   'cancel',
+  'unsubscribe',
+  'email-preferences',
 ]);
 
 // Default categories when Supabase returns none (used on first load or if DB is empty)
@@ -147,6 +151,11 @@ function getPageFromPathname(): Page {
   if (isSuccessPath && params.get('paysera')) return 'success';
   if (pathname.endsWith('cancel') || pathname.includes('/cancel')) return 'cancel';
 
+  if (segments[0] === 'unsubscribe' || pathRel.includes('/unsubscribe')) return 'unsubscribe';
+  if (segments[0] === 'email-preferences' || pathRel.includes('/email-preferences')) {
+    return 'email-preferences';
+  }
+
   if (
     (segments[0] === 'venue' && segments[1] === 'book') ||
     segments[0] === 'book' ||
@@ -179,12 +188,19 @@ function getInitialPage(): Page {
   return getPageFromPathname();
 }
 
+/** Unsubscribe / preferences are static; don’t block on category fetch. */
+function skipInitialLoadingForEmailLinks(): boolean {
+  if (typeof window === 'undefined') return false;
+  const p = getPageFromPathname();
+  return p === 'unsubscribe' || p === 'email-preferences';
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [selectedTab, setSelectedTab] = useState('General Donations');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !skipInitialLoadingForEmailLinks());
 
   useEffect(() => {
     if (!supabase) {
@@ -453,6 +469,14 @@ function App() {
         <Footer />
       </div>
     );
+  }
+
+  if (currentPage === 'unsubscribe') {
+    return <UnsubscribePage onHome={handleBackToEntry} />;
+  }
+
+  if (currentPage === 'email-preferences') {
+    return <EmailPreferencesPage onHome={handleBackToEntry} />;
   }
 
   if (currentPage === 'activities') {

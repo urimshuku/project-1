@@ -1,4 +1,7 @@
 import type { BookingRow, PerDateTimeEntry } from "./types.ts";
+import { buildEmailFooterLinks, shouldSkipUserEmail } from "../_shared/emailFooter.ts";
+import { getUserByEmail } from "../_shared/usersDb.ts";
+import { getServiceRoleClient } from "../_shared/supabaseService.ts";
 
 const isoYmdRe = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -310,6 +313,19 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     return;
   }
 
+  let userRow = null;
+  try {
+    const supabase = getServiceRoleClient();
+    userRow = await getUserByEmail(supabase, booking.email);
+  } catch (e) {
+    console.warn("book-venue: could not load users row for email prefs:", e);
+  }
+
+  if (shouldSkipUserEmail(userRow)) {
+    console.log("book-venue: skipping user confirmation (unsubscribed):", booking.email);
+    return;
+  }
+
   const userSubject = "We received your Studio Space booking request";
   const userText = [
     `Hi ${booking.full_name},`,
@@ -329,12 +345,26 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     "Studio Space",
   ].join("\n");
 
+  const footer = buildEmailFooterLinks(userRow?.unsubscribe_token ?? null);
+  const userTextFull = footer ? `${userText}${footer.text}` : userText;
+  const userHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;line-height:1.5;color:#111;background:#fafafa">
+  <div style="max-width:40rem;margin:0 auto">
+    <pre style="margin:0;font-size:14px;line-height:1.5;white-space:pre-wrap;font-family:inherit;color:#374151">${escapeHtml(userText)}</pre>
+    ${footer?.html ?? ""}
+  </div>
+</body>
+</html>`;
+
   console.log(`book-venue: sending confirmation email to ${booking.email}`);
   await resendSend({
     from: fromEmail,
     to: [booking.email],
     subject: userSubject,
-    text: userText,
+    text: userTextFull,
+    html: userHtml,
   });
   console.log("book-venue: confirmation email sent successfully");
 }

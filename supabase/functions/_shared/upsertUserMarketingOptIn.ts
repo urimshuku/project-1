@@ -1,14 +1,7 @@
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { removeContact, syncContact } from "./resend.ts";
-
-function getServiceClient(): SupabaseClient {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
-  if (!supabaseUrl || !serviceKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
-  return createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-}
+import { getServiceRoleClient } from "./supabaseService.ts";
+import { generateUnsubscribeToken } from "./tokens.ts";
 
 export interface UpsertUserMarketingOptions {
   supabaseClient?: SupabaseClient;
@@ -18,6 +11,7 @@ export interface UpsertUserMarketingOptions {
 
 /**
  * Upsert public.users by email with marketing_opt_in, then sync Resend Contacts (Edge only).
+ * Ensures unsubscribe_token exists (never expose email in URLs — token only).
  * Missing or empty email is a no-op (callers should only pass validated emails).
  */
 export async function upsertUserMarketingOptIn(
@@ -28,13 +22,41 @@ export async function upsertUserMarketingOptIn(
   const normalized = email.trim().toLowerCase();
   if (!normalized) return;
 
-  const supabase = options?.supabaseClient ?? getServiceClient();
+  const supabase = options?.supabaseClient ?? getServiceRoleClient();
   const now = new Date().toISOString();
+
+  const { data: existing } = await supabase
+    .from("users")
+    .select("unsubscribe_token, unsubscribed, email_preferences")
+    .eq("email", normalized)
+    .maybeSingle();
+
+  const existingRow = existing as {
+    unsubscribe_token: string | null;
+    unsubscribed: boolean;
+    email_preferences: unknown;
+  } | null;
+
+  const token =
+    (existingRow?.unsubscribe_token && existingRow.unsubscribe_token.trim()) || generateUnsubscribeToken();
+
+  /** Opting back into marketing clears a prior global unsubscribe. */
+  const unsubscribed = marketingOptIn ? false : Boolean(existingRow?.unsubscribed);
+
+  const emailPrefs =
+    existingRow?.email_preferences &&
+    typeof existingRow.email_preferences === "object" &&
+    !Array.isArray(existingRow.email_preferences)
+      ? (existingRow.email_preferences as Record<string, unknown>)
+      : {};
 
   const { error } = await supabase.from("users").upsert(
     {
       email: normalized,
       marketing_opt_in: marketingOptIn,
+      unsubscribe_token: token,
+      unsubscribed,
+      email_preferences: emailPrefs,
       updated_at: now,
     },
     { onConflict: "email" },

@@ -97,3 +97,29 @@ export async function removeContact(email: string): Promise<void> {
 
   console.error("Resend contacts.remove failed:", error);
 }
+
+/** Mark contact as globally unsubscribed in Resend (one-way from our DB unsubscribe). */
+export async function markContactUnsubscribed(email: string): Promise<void> {
+  const resend = getClient();
+  if (!resend) return;
+
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return;
+
+  const { error } = await resend.contacts.update({
+    email: normalized,
+    unsubscribed: true,
+  });
+
+  if (!error) {
+    console.log("Resend contact marked unsubscribed:", normalized);
+    return;
+  }
+
+  if (looksLikeNotFound(error)) {
+    console.log("Resend markContactUnsubscribed: contact not in audience:", normalized);
+    return;
+  }
+
+  console.error("Resend contacts.update (unsubscribed) failed:", error);
+}

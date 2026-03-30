@@ -3,3 +3,9 @@
 
 [functions.approve-booking]
 verify_jwt = false
+
+[functions.unsubscribe-user]
+verify_jwt = false
+
+[functions.email-preferences]
+verify_jwt = false
