@@ -6,6 +6,7 @@ import { EntryDotsCanvas } from './EntryDotsCanvas';
 import { supabase } from '../lib/supabase';
 import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
+import { MarketingOptInCheckbox } from './MarketingOptInCheckbox';
 
 interface BookingPageProps {
   /** Back control — navigates to venue page */
@@ -323,6 +324,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
   const [perDayTimes, setPerDayTimes] = useState<Record<string, { start: string; end: string }>>({});
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   /** Honeypot — must stay empty (bots often fill hidden fields) */
   const [websiteHoneypot, setWebsiteHoneypot] = useState('');
   const [activityType, setActivityType] = useState('');
@@ -635,6 +637,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                 groupSize: size,
                 notes: additionalRequests.trim() || undefined,
                 website: websiteHoneypot.trim() || undefined,
+                marketingOptIn,
               }
             : asContinuous
               ? {
@@ -648,6 +651,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                   groupSize: size,
                   notes: additionalRequests.trim() || undefined,
                   website: websiteHoneypot.trim() || undefined,
+                  marketingOptIn,
                 }
               : {
                   bookingMode: 'non_continuous',
@@ -661,6 +665,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                   groupSize: size,
                   notes: additionalRequests.trim() || undefined,
                   website: websiteHoneypot.trim() || undefined,
+                  marketingOptIn,
                 },
         ),
       });
@@ -695,6 +700,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
       setEndTime('');
       setPhone('');
       setEmail('');
+      setMarketingOptIn(false);
       setWebsiteHoneypot('');
       setActivityType('');
       setGroupSize('');
@@ -725,7 +731,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
         onLogoClick={onLogoHome}
         logoVariant="venue"
       />
-      <div className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-16">
           <button
             type="button"
@@ -743,7 +749,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
             />
           </button>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 space-y-4 sm:space-y-6 min-w-0 overflow-hidden">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 space-y-4 sm:space-y-6 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Host an Activity
             </h1>
@@ -1217,6 +1223,15 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                 placeholder="Any special requirements, times, or notes…"
               />
               <BookingFieldError id="booking-requests-error" message={fieldErrors.notes} />
+            </div>
+
+            <div className="w-full scroll-mt-6 pt-2">
+              <MarketingOptInCheckbox
+                id="booking-marketing-opt-in"
+                checked={marketingOptIn}
+                onChange={setMarketingOptIn}
+                variant="venue"
+              />
             </div>
 
             <div className="flex flex-col items-center justify-center gap-2 pt-2">

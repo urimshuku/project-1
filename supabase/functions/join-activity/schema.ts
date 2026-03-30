@@ -11,6 +11,7 @@ const joinActivitySchema = z.object({
   email: z.string().trim().min(1, "email is required").email("email must be valid").max(254, "email is too long"),
   activities: z.array(z.string().trim().min(1)).min(1, "Select at least one activity"),
   futureActivities: z.string().trim().max(1000, "futureActivities is too long").optional(),
+  marketingOptIn: z.boolean().optional().default(false),
 });
 
 export function validateJoinActivityPayload(payload: unknown): JoinActivityValidationResult {
@@ -28,6 +29,7 @@ export function validateJoinActivityPayload(payload: unknown): JoinActivityValid
       email: value.email.trim().toLowerCase(),
       activities: value.activities,
       futureActivities: value.futureActivities?.trim() || null,
+      marketingOptIn: value.marketingOptIn,
     },
   };
 }

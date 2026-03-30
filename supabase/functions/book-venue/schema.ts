@@ -66,6 +66,7 @@ const baseFields = z.object({
     .min(1, "email is required")
     .email("email must be valid")
     .max(254, "email is too long"),
+  marketingOptIn: z.boolean().optional().default(false),
   website: z.string().optional(),
   dryRun: z.boolean().optional(),
 });
@@ -143,6 +144,7 @@ export function validateBookVenuePayload(payload: unknown): BookVenueValidationR
         groupSize: v.groupSize,
         notes: v.notes?.trim() || null,
         email: v.email.trim().toLowerCase(),
+        marketingOptIn: v.marketingOptIn,
       },
     };
   }
@@ -245,6 +247,7 @@ export function validateBookVenuePayload(payload: unknown): BookVenueValidationR
         groupSize: v.groupSize,
         notes: v.notes?.trim() || null,
         email: v.email.trim().toLowerCase(),
+        marketingOptIn: v.marketingOptIn,
       },
     };
   }
@@ -286,6 +289,7 @@ export function validateBookVenuePayload(payload: unknown): BookVenueValidationR
       groupSize: v.groupSize,
       notes: v.notes?.trim() || null,
       email: v.email.trim().toLowerCase(),
+      marketingOptIn: v.marketingOptIn,
     },
   };
 }

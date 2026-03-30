@@ -1,3 +1,4 @@
+import { upsertUserMarketingOptIn } from "../_shared/upsertUserMarketingOptIn.ts";
 import { upsertBookingByEmail } from "./db.ts";
 import { sendBookingEmails } from "./email.ts";
 import { validateBookVenuePayload, z } from "./schema.ts";
@@ -76,6 +77,13 @@ Deno.serve(async (req: Request) => {
 
     const saveResult = await upsertBookingByEmail(validated.input);
     const booking = saveResult.booking;
+    try {
+      await upsertUserMarketingOptIn(validated.input.email, validated.input.marketingOptIn, {
+        displayName: validated.input.fullName,
+      });
+    } catch (userErr) {
+      console.error("book-venue: booking saved but users marketing_opt_in upsert failed:", userErr);
+    }
     const message = saveResult.alreadySignedUp
       ? "You're already signed up. We updated your previous request."
       : undefined;

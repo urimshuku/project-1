@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Category } from '../lib/types';
 import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
+import { MarketingOptInCheckbox } from './MarketingOptInCheckbox';
 
 interface PaymentGatewayProps {
   category: Category;
@@ -21,6 +22,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
   const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState('');
   const [email, setEmail] = useState('');
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [wordsOfSupport, setWordsOfSupport] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
     amount,
     is_anonymous: isAnonymous,
     words_of_support: wordsOfSupport.trim().slice(0, MAX_WORDS_OF_SUPPORT) || undefined,
+    marketingOptIn,
   });
   useEffect(() => {
     formDataRef.current = {
@@ -50,8 +53,9 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
       amount,
       is_anonymous: isAnonymous,
       words_of_support: wordsOfSupport.trim().slice(0, MAX_WORDS_OF_SUPPORT) || undefined,
+      marketingOptIn,
     };
-  }, [category.id, donorName, email, isAnonymous, wordsOfSupport, amount]);
+  }, [category.id, donorName, email, isAnonymous, wordsOfSupport, amount, marketingOptIn]);
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -88,6 +92,7 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
           amount: d.amount,
           is_anonymous: d.is_anonymous,
           words_of_support: d.words_of_support,
+          marketingOptIn: d.marketingOptIn,
           accepturl,
           cancelurl,
         }),
@@ -289,6 +294,14 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
               {info}
             </p>
           )}
+
+          <div className="w-full">
+            <MarketingOptInCheckbox
+              id="donation-marketing-opt-in"
+              checked={marketingOptIn}
+              onChange={setMarketingOptIn}
+            />
+          </div>
 
           <button
             type="button"

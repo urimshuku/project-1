@@ -12,6 +12,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import md5 from "npm:md5@2.3.0";
+import { upsertUserMarketingOptIn } from "../_shared/upsertUserMarketingOptIn.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +45,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("Missing Supabase config");
     }
 
-    const body = await req.json();
+    const body = await req.json() as Record<string, unknown>;
     const {
       category_id,
       donor_name,
@@ -55,6 +56,13 @@ Deno.serve(async (req: Request) => {
       accepturl,
       cancelurl,
     } = body;
+
+    const marketingOptIn =
+      typeof body.marketingOptIn === "boolean"
+        ? body.marketingOptIn
+        : typeof body.marketing_opt_in === "boolean"
+          ? body.marketing_opt_in
+          : false;
 
     // Validate required fields
     if (!category_id || donor_name == null || amount == null || amount <= 0) {
@@ -147,6 +155,20 @@ Deno.serve(async (req: Request) => {
         console.error("Failed to store pending Paysera donation:", insertError);
         throw new Error("Failed to store pending donation");
       }
+    }
+
+    const donationDisplayName =
+      Boolean(is_anonymous) || !String(donor_name ?? "").trim()
+        ? undefined
+        : String(donor_name).trim();
+
+    try {
+      await upsertUserMarketingOptIn(normalizedEmail, marketingOptIn, {
+        supabaseClient: supabase,
+        displayName: donationDisplayName,
+      });
+    } catch (userErr) {
+      console.error("paysera-pay-url: pending saved but users marketing_opt_in upsert failed:", userErr);
     }
 
     const payUrl = `https://www.paysera.com/pay/?data=${encodeURIComponent(dataRaw)}&sign=${sign}`;

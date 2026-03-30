@@ -22,6 +22,8 @@ export interface BookVenueRequestBody {
   groupSize: number;
   notes?: string;
   email: string;
+  /** Newsletter / studio updates opt-in; default false when omitted */
+  marketingOptIn?: boolean;
   website?: string;
   dryRun?: boolean;
 }
@@ -41,6 +43,7 @@ export interface ValidatedBookVenueInput {
   groupSize: number;
   notes: string | null;
   email: string;
+  marketingOptIn: boolean;
 }
 
 export interface BookingRow {

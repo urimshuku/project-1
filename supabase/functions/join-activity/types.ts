@@ -4,6 +4,7 @@ export interface JoinActivityRequestBody {
   email: string;
   activities: string[];
   futureActivities?: string;
+  marketingOptIn?: boolean;
 }
 
 export interface ValidatedJoinActivityInput {
@@ -12,6 +13,7 @@ export interface ValidatedJoinActivityInput {
   email: string;
   activities: string[];
   futureActivities: string | null;
+  marketingOptIn: boolean;
 }
 
 export interface ActivityJoinRow {

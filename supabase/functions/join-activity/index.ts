@@ -1,3 +1,4 @@
+import { upsertUserMarketingOptIn } from "../_shared/upsertUserMarketingOptIn.ts";
 import { upsertActivityJoinByEmail } from "./db.ts";
 import { sendJoinEmails } from "./email.ts";
 import { validateJoinActivityPayload, z } from "./schema.ts";
@@ -47,6 +48,13 @@ Deno.serve(async (req: Request) => {
 
     const saveResult = await upsertActivityJoinByEmail(validated.input);
     const joinRow = saveResult.joinRow;
+    try {
+      await upsertUserMarketingOptIn(validated.input.email, validated.input.marketingOptIn, {
+        displayName: validated.input.fullName,
+      });
+    } catch (userErr) {
+      console.error("join-activity: join saved but users marketing_opt_in upsert failed:", userErr);
+    }
     const message = saveResult.alreadySignedUp
       ? "You're already signed up. We updated your previous request."
       : undefined;

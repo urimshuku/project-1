@@ -6,6 +6,7 @@ import { EntryDotsCanvas } from './EntryDotsCanvas';
 import type { ActivitySection } from '../lib/activitiesData';
 import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
 import { PHONE_INPUT_ATTRS, sanitizePhoneInput } from '../lib/sanitizePhoneInput';
+import { MarketingOptInCheckbox } from './MarketingOptInCheckbox';
 
 interface JoinPageProps {
   onBackToActivities: () => void;
@@ -16,6 +17,7 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [futureActivities, setFutureActivities] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +93,7 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
           email: email.trim() || undefined,
           activities: Array.from(selectedIds),
           futureActivities: futureActivities.trim() || undefined,
+          marketingOptIn,
         }),
       });
 
@@ -119,6 +122,7 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
       setFullName('');
       setPhone('');
       setEmail('');
+      setMarketingOptIn(false);
       setFutureActivities('');
       setSelectedIds(new Set());
 
@@ -149,9 +153,9 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
         logoVariant="activities"
       />
       <div className="flex-1 flex flex-col">
-        <div className="max-w-7xl mx-auto w-full px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12 flex flex-col flex-1">
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            <div className="max-w-lg w-full">
+        <div className="max-w-7xl mx-auto w-full px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12 flex flex-col flex-1 min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-start min-h-0 overflow-y-auto w-full">
+            <div className="max-w-lg w-full pb-4">
               <button
                 type="button"
                 onClick={() => {
@@ -273,6 +277,15 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-[#4DA1A9] focus:border-[#4DA1A9] resize-y min-h-[80px]"
                 />
               </fieldset>
+
+              <div className="w-full pt-2">
+                <MarketingOptInCheckbox
+                  id="join-marketing-opt-in"
+                  checked={marketingOptIn}
+                  onChange={setMarketingOptIn}
+                  variant="activities"
+                />
+              </div>
 
               <div className="pt-2 flex flex-col items-center justify-center gap-2">
                 <button
