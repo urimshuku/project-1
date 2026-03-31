@@ -1,3 +1,4 @@
+import React from "npm:react@18.3.1";
 import { Link, Section, Text } from "npm:@react-email/components@1.0.10";
 import { brandColors, spacing } from "../theme.ts";
 

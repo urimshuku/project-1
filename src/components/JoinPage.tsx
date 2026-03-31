@@ -114,9 +114,6 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
 
       const resp = data as { emailSent?: boolean; message?: string; alreadySignedUp?: boolean };
       setEmailSent(resp.emailSent !== false);
-      if (resp.alreadySignedUp && resp.message) {
-        setSubmitInfo(resp.message);
-      }
       setIsSuccess(true);
 
       setFullName('');

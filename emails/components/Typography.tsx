@@ -1,3 +1,4 @@
+import React from "npm:react@18.3.1";
 import { Heading, Link, Text } from "npm:@react-email/components@1.0.10";
 import type { CSSProperties, ReactNode } from "npm:react@18.3.1";
 import { brandColors, emailSemantics, fonts, spacing } from "../theme.ts";

@@ -1,3 +1,4 @@
+import React from "npm:react@18.3.1";
 import { Button, Section, Text } from "npm:@react-email/components@1.0.10";
 import EmailLayout from "../components/EmailLayout.tsx";
 import { H3, PreMono, Muted } from "../components/Typography.tsx";

@@ -1,3 +1,4 @@
+import React from "npm:react@18.3.1";
 import { Body, Container, Head, Html } from "npm:@react-email/components@1.0.10";
 import type { ReactNode } from "npm:react@18.3.1";
 import { brandColors, emailPalette, fonts, spacing } from "../theme.ts";

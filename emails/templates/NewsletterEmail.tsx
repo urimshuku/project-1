@@ -1,3 +1,4 @@
+import React from "npm:react@18.3.1";
 import EmailFooter from "../components/EmailFooter.tsx";
 import EmailLayout from "../components/EmailLayout.tsx";
 import { H1, H2, LinkText, P } from "../components/Typography.tsx";

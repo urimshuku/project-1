@@ -91,7 +91,9 @@ Deno.serve(async (req: Request) => {
     try {
       await sendBookingEmails(booking);
     } catch (emailErr) {
-      console.error("book-venue: booking saved but email failed:", emailErr);
+      const safeMessage =
+        emailErr instanceof Error ? emailErr.message : typeof emailErr === "string" ? emailErr : "Unknown email error";
+      console.error("book-venue: booking saved but email failed:", safeMessage);
       return jsonResponse(
         {
           success: true,
@@ -101,6 +103,7 @@ Deno.serve(async (req: Request) => {
           alreadySignedUp: saveResult.alreadySignedUp,
           updatedExisting: saveResult.updatedExisting,
           emailSent: false,
+          emailError: safeMessage,
         },
         201,
       );

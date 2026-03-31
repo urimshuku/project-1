@@ -62,7 +62,9 @@ Deno.serve(async (req: Request) => {
     try {
       await sendJoinEmails(joinRow);
     } catch (emailErr) {
-      console.error("join-activity: saved but email failed:", emailErr);
+      const safeMessage =
+        emailErr instanceof Error ? emailErr.message : typeof emailErr === "string" ? emailErr : "Unknown email error";
+      console.error("join-activity: saved but email failed:", safeMessage);
       return jsonResponse(
         {
           success: true,
@@ -72,6 +74,7 @@ Deno.serve(async (req: Request) => {
           alreadySignedUp: saveResult.alreadySignedUp,
           updatedExisting: saveResult.updatedExisting,
           emailSent: false,
+          emailError: safeMessage,
         },
         201,
       );
