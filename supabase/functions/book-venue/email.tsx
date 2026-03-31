@@ -1,5 +1,5 @@
-import { render } from "npm:@react-email/render@2.0.4";
 import React from "npm:react@18.3.1";
+import { renderEmailToHtml } from "../_shared/renderEmail.tsx";
 import BookingConfirmationEmail from "../../../emails/templates/BookingConfirmationEmail.tsx";
 import VenueBookingAdminEmail from "../../../emails/templates/VenueBookingAdminEmail.tsx";
 import type { BookingRow, PerDateTimeEntry } from "./types.ts";
@@ -268,12 +268,11 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
         adminDetails,
       ].join("\n");
 
-  const adminHtml = await render(
+  const adminHtml = renderEmailToHtml(
     <VenueBookingAdminEmail
       detailsPlainText={adminDetails}
       approveUrl={approveUrl || undefined}
     />,
-    { pretty: false },
   );
 
   const supabase = safeServiceClient();
@@ -346,7 +345,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const footer = buildEmailFooterLinks(userRow?.unsubscribe_token ?? null);
   const userTextFull = footer ? `${userText}${footer.text}` : userText;
 
-  const userHtml = await render(
+  const userHtml = renderEmailToHtml(
     <BookingConfirmationEmail
       recipientName={booking.full_name}
       scheduleBlock={scheduleBlockUser(booking)}
@@ -355,7 +354,6 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
       unsubscribeUrl={footer?.unsubscribeUrl}
       preferencesUrl={footer?.preferencesUrl}
     />,
-    { pretty: false },
   );
 
   let userHtmlOut = userHtml;

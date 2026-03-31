@@ -1,5 +1,5 @@
-import { render } from "npm:@react-email/render@2.0.4";
 import React from "npm:react@18.3.1";
+import { renderEmailToHtml } from "../_shared/renderEmail.tsx";
 import JoinActivityAdminEmail from "../../../emails/templates/JoinActivityAdminEmail.tsx";
 import JoinActivityConfirmationEmail from "../../../emails/templates/JoinActivityConfirmationEmail.tsx";
 import type { ActivityJoinRow } from "./types.ts";
@@ -81,7 +81,7 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
     `Future activity ideas: ${join.future_activities ?? "None"}`,
   ].join("\n");
 
-  const adminHtml = await render(<JoinActivityAdminEmail bodyPlainText={adminText} />, { pretty: false });
+  const adminHtml = renderEmailToHtml(<JoinActivityAdminEmail bodyPlainText={adminText} />);
 
   const supabase = safeServiceClient();
 
@@ -149,14 +149,13 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   const footer = buildEmailFooterLinks(userRow?.unsubscribe_token ?? null);
   const userTextFull = footer ? `${userText}${footer.text}` : userText;
 
-  const userHtml = await render(
+  const userHtml = renderEmailToHtml(
     <JoinActivityConfirmationEmail
       recipientName={join.full_name}
       activitiesList={activitiesList}
       unsubscribeUrl={footer?.unsubscribeUrl}
       preferencesUrl={footer?.preferencesUrl}
     />,
-    { pretty: false },
   );
 
   let userHtmlOut = userHtml;
