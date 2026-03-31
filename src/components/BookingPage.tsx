@@ -350,6 +350,13 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
     [customPerDay, startTime, endTime],
   );
 
+  // If the user reduces selection to fewer than 2 days, turn off per-day times.
+  useEffect(() => {
+    if (selectedDates.length < 2 && customPerDay) {
+      setCustomPerDay(false);
+    }
+  }, [selectedDates, customPerDay]);
+
   useEffect(() => {
     return () => {
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
@@ -948,6 +955,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                   type="checkbox"
                   className="mt-1 shrink-0"
                   checked={customPerDay}
+                  disabled={selectedDates.length < 2}
                   onChange={(e) => {
                     const on = e.target.checked;
                     if (on) {
@@ -956,7 +964,12 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                     setCustomPerDay(on);
                   }}
                 />
-                <label htmlFor="booking-custom-per-day" className="text-sm text-gray-700 cursor-pointer">
+                <label
+                  htmlFor="booking-custom-per-day"
+                  className={`text-sm ${
+                    selectedDates.length < 2 ? 'text-gray-400 cursor-default' : 'text-gray-700 cursor-pointer'
+                  }`}
+                >
                   Set different start/end times for each day
                 </label>
               </div>
