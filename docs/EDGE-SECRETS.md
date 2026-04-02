@@ -21,7 +21,7 @@ supabase secrets list   # names only; values are hashed
 ## `PUBLIC_APP_URL` (email footers)
 
 - **Set on the server** as an Edge secret — **not** a `VITE_*` variable in the React app.
-- Value: the **public origin** of the deployed site, **no trailing slash**, e.g. `https://studiospace.community`
+- Value: the **public origin** of the deployed site, **no trailing slash**, e.g. `https://www.studiospace.community`
 - Used to build **unsubscribe** and **email preferences** links inside transactional emails.
 - **If those links are missing** in outgoing mail, verify `PUBLIC_APP_URL` is set and redeploy functions that send email / render footers.
 

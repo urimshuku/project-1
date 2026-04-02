@@ -13,7 +13,7 @@ function safeHttpUrl(raw: string): string | null {
 
 function fallbackRedirect(): string {
   const b = getPublicAppUrl();
-  return b || "https://studiospace.community";
+  return b || "https://www.studiospace.community";
 }
 
 Deno.serve(async (req: Request) => {

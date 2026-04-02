@@ -1,5 +1,5 @@
 /**
- * Public site origin for links in emails (e.g. https://studiospace.example.com).
+ * Public site origin for links in emails (e.g. https://www.studiospace.community).
  * Set in Supabase Dashboard → Edge Functions → Secrets:
  *   PUBLIC_APP_URL  (or APP_URL)
  * Must match where the SPA is served (no trailing slash). If unset, unsubscribe links are omitted from emails.
