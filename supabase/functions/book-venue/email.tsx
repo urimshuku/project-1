@@ -144,10 +144,16 @@ function scheduleBlock(booking: BookingRow): string {
   return [detailHeader, body].filter(Boolean).join("\n");
 }
 
-function scheduleBlockUser(booking: BookingRow): string {
+/** User-facing schedule block: always under "Dates & times:" with one row per line where applicable. */
+function userScheduleSection(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
-    return `When: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)} → ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`;
+    return [
+      "Dates & times:",
+      "",
+      `From: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)}`,
+      `To: ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`,
+    ].join("\n");
   }
   const per = normalizePerDateEntries(booking.per_date_times);
   const { kind, body } = formatNonContinuousScheduleForEmail(
@@ -156,15 +162,11 @@ function scheduleBlockUser(booking: BookingRow): string {
     booking.start_time,
     booking.end_time,
   );
-  const userHeader =
-    kind === "per_day_custom"
-      ? "Dates & times (each line is one day):"
-      : kind === "shared_booking_window"
-        ? "Booking window and selected days:"
-        : kind === "single_day_shared_times"
-          ? "Date & time:"
-          : "Schedule:";
-  return [userHeader, body].filter(Boolean).join("\n");
+  if (kind === "empty") {
+    return ["Dates & times:", "", body].join("\n");
+  }
+  // Header + blank line + body (body is already one line per day for per_day_custom).
+  return ["Dates & times:", "", body].join("\n");
 }
 
 function adminDateTimeBlock(booking: BookingRow): string {
@@ -187,14 +189,15 @@ function adminDateTimeBlock(booking: BookingRow): string {
 
 function userDetailsBlock(booking: BookingRow): string {
   return [
-    `Full name: ${booking.full_name}`,
-    `Phone number: ${booking.phone}`,
-    `Email address: ${booking.email ?? "(not provided)"}`,
+    `Name: ${booking.full_name}`,
+    `Phone: ${booking.phone}`,
+    `Email: ${booking.email ?? "(not provided)"}`,
     `Activity: ${booking.activity_type}`,
     `Group size: ${booking.group_size}`,
-    `Other requests: ${booking.notes?.trim() ? booking.notes : "None"}`,
     "",
-    scheduleBlockUser(booking),
+    userScheduleSection(booking),
+    "",
+    `Notes: ${booking.notes?.trim() ? booking.notes : "None"}`,
   ].join("\n");
 }
 
