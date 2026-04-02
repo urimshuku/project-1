@@ -167,6 +167,37 @@ function scheduleBlockUser(booking: BookingRow): string {
   return [userHeader, body].filter(Boolean).join("\n");
 }
 
+function adminDateTimeBlock(booking: BookingRow): string {
+  const mode = booking.booking_mode ?? "non_continuous";
+  if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
+    return `Date & time: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)} → ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`;
+  }
+  const per = normalizePerDateEntries(booking.per_date_times);
+  const { kind, body } = formatNonContinuousScheduleForEmail(
+    booking.dates,
+    per,
+    booking.start_time,
+    booking.end_time,
+  );
+
+  if (kind === "single_day_shared_times") return `Date & time: ${body}`;
+
+  return `Date & time:\n${body}`;
+}
+
+function userDetailsBlock(booking: BookingRow): string {
+  return [
+    `Full name: ${booking.full_name}`,
+    `Phone number: ${booking.phone}`,
+    `Email address: ${booking.email ?? "(not provided)"}`,
+    `Activity: ${booking.activity_type}`,
+    `Group size: ${booking.group_size}`,
+    `Other requests: ${booking.notes?.trim() ? booking.notes : "None"}`,
+    "",
+    scheduleBlockUser(booking),
+  ].join("\n");
+}
+
 function getAdminEmail(): string {
   return Deno.env.get("BOOKING_ADMIN_EMAIL")?.trim() || "admin@studiospace.community";
 }
@@ -224,7 +255,7 @@ function adminEmailDetailsBody(booking: BookingRow): string {
     `Activity: ${booking.activity_type}`,
     `Group Size: ${booking.group_size}`,
     "",
-    scheduleBlock(booking),
+    adminDateTimeBlock(booking),
     "",
     `Notes: ${booking.notes ?? "None"}`,
   ].join("\n");
@@ -324,6 +355,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   }
 
   const userSubject = "We received your Studio Space booking request";
+  const detailsBlock = userDetailsBlock(booking);
   const userText = [
     `Hi ${booking.full_name},`,
     "",
@@ -331,10 +363,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
     "",
     "We received the details below:",
     "",
-    scheduleBlockUser(booking),
-    "",
-    `Activity: ${booking.activity_type}`,
-    `Group Size: ${booking.group_size}`,
+    detailsBlock,
     "",
     "We will contact you shortly to confirm availability.",
     "",
@@ -348,9 +377,7 @@ export async function sendBookingEmails(booking: BookingRow): Promise<void> {
   const userHtml = renderEmailToHtml(
     <BookingConfirmationEmail
       recipientName={booking.full_name}
-      scheduleBlock={scheduleBlockUser(booking)}
-      activityType={booking.activity_type}
-      groupSize={booking.group_size}
+      detailsBlock={detailsBlock}
       unsubscribeUrl={footer?.unsubscribeUrl}
       preferencesUrl={footer?.preferencesUrl}
     />,
