@@ -2,8 +2,10 @@
 
 This guide walks you through moving your site from:
 
-**Canonical URL:** `https://www.studiospace.community`  
+**Canonical URL (apex, no www):** `https://studiospace.community`  
 **Backup URL:** `https://urimshuku.github.io/studio-space/`
+
+Use this exact origin everywhere (`index.html` canonical, `PUBLIC_APP_URL`, Search Console). Redirect `www` → apex in DNS or GitHub Pages if you still use both hostnames.
 
 You need:
 
