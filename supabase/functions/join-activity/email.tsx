@@ -78,9 +78,7 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   const activitiesList = join.activities.join(", ");
 
   const adminSubject = `New activity join request from ${join.full_name}`;
-  const adminText = [
-    "A new activity join request was submitted.",
-    "",
+  const adminDetailsInBox = [
     `Join ID: ${join.id}`,
     `Created At: ${join.created_at}`,
     "",
@@ -88,10 +86,12 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
     `Phone: ${join.phone ?? "(not provided)"}`,
     `Email: ${join.email ?? "(not provided)"}`,
     `Activities: ${activitiesList}`,
-    `Future activity ideas: ${join.future_activities ?? "None"}`,
+    `Future activity ideas: ${join.future_activities?.trim() ? join.future_activities : "None"}`,
   ].join("\n");
 
-  const adminHtml = renderEmailToHtml(<JoinActivityAdminEmail bodyPlainText={adminText} />);
+  const adminText = ["A new activity join request was submitted.", "", adminDetailsInBox].join("\n");
+
+  const adminHtml = renderEmailToHtml(<JoinActivityAdminEmail detailsPlainText={adminDetailsInBox} />);
 
   const supabase = safeServiceClient();
 
