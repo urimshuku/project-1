@@ -169,10 +169,16 @@ function userScheduleSection(booking: BookingRow): string {
   return ["Dates & times:", "", body].join("\n");
 }
 
+/** Admin schedule block: "Date & time:" then blank line then rows (same structure as user-facing schedule). */
 function adminDateTimeBlock(booking: BookingRow): string {
   const mode = booking.booking_mode ?? "non_continuous";
   if (mode === "continuous" && booking.continuous_start && booking.continuous_end) {
-    return `Date & time: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)} → ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`;
+    return [
+      "Date & time:",
+      "",
+      `From: ${formatBookingDateTimeDdMmYyyy(booking.continuous_start)}`,
+      `To: ${formatBookingDateTimeDdMmYyyy(booking.continuous_end)}`,
+    ].join("\n");
   }
   const per = normalizePerDateEntries(booking.per_date_times);
   const { kind, body } = formatNonContinuousScheduleForEmail(
@@ -181,10 +187,10 @@ function adminDateTimeBlock(booking: BookingRow): string {
     booking.start_time,
     booking.end_time,
   );
-
-  if (kind === "single_day_shared_times") return `Date & time: ${body}`;
-
-  return `Date & time:\n${body}`;
+  if (kind === "empty") {
+    return ["Date & time:", "", body].join("\n");
+  }
+  return ["Date & time:", "", body].join("\n");
 }
 
 function userDetailsBlock(booking: BookingRow): string {
@@ -260,7 +266,7 @@ function adminEmailDetailsBody(booking: BookingRow): string {
     "",
     adminDateTimeBlock(booking),
     "",
-    `Notes: ${booking.notes ?? "None"}`,
+    `Notes: ${booking.notes?.trim() ? booking.notes : "None"}`,
   ].join("\n");
 }
 
