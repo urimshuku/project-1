@@ -1,7 +1,8 @@
 import React from "npm:react@18.3.1";
 import { Button, Section, Text } from "npm:@react-email/components@1.0.10";
 import EmailLayout from "../components/EmailLayout.tsx";
-import { H3, PreMono, Muted } from "../components/Typography.tsx";
+import { EmailCardPlainText } from "../components/EmailCardPlainText.tsx";
+import { H3, Muted } from "../components/Typography.tsx";
 import { brandColors, emailPalette, emailSemantics, spacing } from "../theme.ts";
 
 export type VenueBookingAdminEmailProps = {
@@ -17,17 +18,7 @@ export default function VenueBookingAdminEmail({ detailsPlainText, approveUrl }:
     <EmailLayout>
       <H3>Request details</H3>
 
-      <Section
-        style={{
-          backgroundColor: emailPalette.cardBg,
-          padding: spacing.md,
-          borderRadius: "8px",
-          border: `1px solid ${emailSemantics.border}`,
-          marginBottom: spacing.md,
-        }}
-      >
-        <PreMono>{detailsPlainText}</PreMono>
-      </Section>
+      <EmailCardPlainText text={detailsPlainText} marginBottom={spacing.md} />
 
       {hasApprove && approveUrl ? (
         <Section

@@ -102,7 +102,7 @@ export function LinkText({ href, children }: { href: string; children: ReactNode
 }
 
 /** Renders plain text with explicit line breaks — email clients often ignore `white-space: pre-wrap` on `<p>`. */
-function TextWithExplicitLineBreaks({
+export function PlainTextLines({
   children,
   style,
 }: {
@@ -122,40 +122,9 @@ function TextWithExplicitLineBreaks({
   );
 }
 
-/** Preformatted block (schedules, IDs) — preserves line breaks. */
-export function PreBlock({ children }: { children: string }) {
+/** Body copy with line breaks — same typography as `P`, for multi-line blocks (matches join-activity style). */
+export function MultilineP({ children }: { children: string }) {
   return (
-    <TextWithExplicitLineBreaks
-      style={{
-        fontFamily: fonts.body,
-        color: emailSemantics.textBody,
-        fontSize: "14px",
-        lineHeight: "22px",
-        margin: `0 0 ${spacing.md}`,
-        padding: spacing.md,
-        backgroundColor: "#F9FAFB",
-        borderRadius: "8px",
-        border: `1px solid ${emailSemantics.border}`,
-      }}
-    >
-      {children}
-    </TextWithExplicitLineBreaks>
-  );
-}
-
-/** Monospace pre block (admin raw request dumps). */
-export function PreMono({ children }: { children: string }) {
-  return (
-    <TextWithExplicitLineBreaks
-      style={{
-        fontFamily: fonts.mono,
-        color: emailSemantics.textBody,
-        fontSize: "13px",
-        lineHeight: 1.45,
-        margin: 0,
-      }}
-    >
-      {children}
-    </TextWithExplicitLineBreaks>
+    <PlainTextLines style={{ ...pStyle, margin: `0 0 ${spacing.md}` }}>{children}</PlainTextLines>
   );
 }

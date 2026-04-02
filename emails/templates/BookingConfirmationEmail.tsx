@@ -1,8 +1,7 @@
 import React from "npm:react@18.3.1";
 import EmailFooter from "../components/EmailFooter.tsx";
 import EmailLayout from "../components/EmailLayout.tsx";
-import EmailWordmark from "../components/EmailWordmark.tsx";
-import { H2, P, PreBlock } from "../components/Typography.tsx";
+import { H2, MultilineP, P } from "../components/Typography.tsx";
 
 export type BookingConfirmationEmailProps = {
   recipientName: string;
@@ -28,7 +27,7 @@ export default function BookingConfirmationEmail({
 
       <P>Thanks for your booking request. We received the details below:</P>
 
-      <PreBlock>{detailsBlock}</PreBlock>
+      <MultilineP>{detailsBlock}</MultilineP>
 
       <P>We will contact you shortly to confirm availability.</P>
 
@@ -37,7 +36,6 @@ export default function BookingConfirmationEmail({
         <br />
         Studio Space
       </P>
-      <EmailWordmark />
 
       {showFooter && unsubscribeUrl ? (
         <EmailFooter unsubscribeUrl={unsubscribeUrl} preferencesUrl={preferencesUrl} />
