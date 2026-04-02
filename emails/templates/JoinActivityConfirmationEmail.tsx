@@ -1,18 +1,22 @@
 import React from "npm:react@18.3.1";
 import EmailFooter from "../components/EmailFooter.tsx";
 import EmailLayout from "../components/EmailLayout.tsx";
+import EmailWordmark from "../components/EmailWordmark.tsx";
+import { EmailCardPlainText } from "../components/EmailCardPlainText.tsx";
 import { H2, P } from "../components/Typography.tsx";
+import { spacing } from "../theme.ts";
 
 export type JoinActivityConfirmationEmailProps = {
   recipientName: string;
-  activitiesList: string;
+  /** Name through future activity ideas, line breaks preserved. */
+  detailsBlock: string;
   unsubscribeUrl?: string;
   preferencesUrl?: string;
 };
 
 export default function JoinActivityConfirmationEmail({
   recipientName,
-  activitiesList,
+  detailsBlock,
   unsubscribeUrl,
   preferencesUrl,
 }: JoinActivityConfirmationEmailProps) {
@@ -24,11 +28,11 @@ export default function JoinActivityConfirmationEmail({
 
       <P>Hi {recipientName.trim()},</P>
 
-      <P>Thank you for your interest in joining Studio Space activities.</P>
-
       <P>
-        <strong>Activities selected:</strong> {activitiesList}
+        Thank you for your interest in joining Studio Space activities. We received the details below:
       </P>
+
+      <EmailCardPlainText text={detailsBlock} marginBottom={spacing.md} />
 
       <P>We will be in touch with you soon with more information.</P>
 
@@ -37,6 +41,8 @@ export default function JoinActivityConfirmationEmail({
         <br />
         Studio Space
       </P>
+
+      <EmailWordmark />
 
       {showFooter && unsubscribeUrl ? (
         <EmailFooter unsubscribeUrl={unsubscribeUrl} preferencesUrl={preferencesUrl} />

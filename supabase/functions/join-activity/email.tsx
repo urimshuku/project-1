@@ -62,6 +62,16 @@ async function resendSend(params: {
   }
 }
 
+function userJoinDetailsBlock(join: ActivityJoinRow, activitiesList: string): string {
+  return [
+    `Name: ${join.full_name}`,
+    `Phone: ${join.phone ?? "(not provided)"}`,
+    `Email: ${join.email ?? "(not provided)"}`,
+    `Activities: ${activitiesList}`,
+    `Future activity ideas: ${join.future_activities?.trim() ? join.future_activities : "None"}`,
+  ].join("\n");
+}
+
 export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   const adminEmail = getAdminEmail();
   const fromEmail = getFromEmail();
@@ -132,13 +142,13 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   }
 
   const userSubject = "We received your Studio Space activity join request";
+  const detailsBlock = userJoinDetailsBlock(join, activitiesList);
   const userText = [
     `Hi ${join.full_name},`,
     "",
-    "Thank you for your interest in joining in Studio Space Activities!",
+    "Thank you for your interest in joining Studio Space activities. We received the details below:",
     "",
-    "We received the details below:",
-    `Activities selected: ${activitiesList}`,
+    detailsBlock,
     "",
     "We will be in touch with you soon with more information.",
     "",
@@ -152,7 +162,7 @@ export async function sendJoinEmails(join: ActivityJoinRow): Promise<void> {
   const userHtml = renderEmailToHtml(
     <JoinActivityConfirmationEmail
       recipientName={join.full_name}
-      activitiesList={activitiesList}
+      detailsBlock={detailsBlock}
       unsubscribeUrl={footer?.unsubscribeUrl}
       preferencesUrl={footer?.preferencesUrl}
     />,

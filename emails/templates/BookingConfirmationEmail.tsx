@@ -1,6 +1,7 @@
 import React from "npm:react@18.3.1";
 import EmailFooter from "../components/EmailFooter.tsx";
 import EmailLayout from "../components/EmailLayout.tsx";
+import EmailWordmark from "../components/EmailWordmark.tsx";
 import { H2, MultilineP, P } from "../components/Typography.tsx";
 
 export type BookingConfirmationEmailProps = {
@@ -36,6 +37,8 @@ export default function BookingConfirmationEmail({
         <br />
         Studio Space
       </P>
+
+      <EmailWordmark />
 
       {showFooter && unsubscribeUrl ? (
         <EmailFooter unsubscribeUrl={unsubscribeUrl} preferencesUrl={preferencesUrl} />
