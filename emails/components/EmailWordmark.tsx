@@ -3,8 +3,8 @@ import { Section, Text } from "npm:@react-email/components@1.0.10";
 import { fonts, spacing } from "../theme.ts";
 
 /**
- * Text-only Studio Space mark for transactional emails (no PNG / no circular icon).
- * White type on a narrow dark strip so it stays readable on light containers.
+ * Text-only Studio Space mark for transactional emails (no PNG, no background shape).
+ * White type for dark email UIs; use a dark outer email body so it stays readable.
  */
 export default function EmailWordmark() {
   return (
@@ -12,20 +12,16 @@ export default function EmailWordmark() {
       style={{
         textAlign: "center",
         margin: `0 auto ${spacing.md}`,
-        maxWidth: "168px",
-        padding: `${spacing.sm} ${spacing.md}`,
-        backgroundColor: "#111827",
-        borderRadius: "8px",
       }}
     >
       <Text
         style={{
           margin: 0,
           color: "#ffffff",
-          fontSize: "24px",
+          fontSize: "18px",
           fontWeight: 700,
           fontFamily: fonts.body,
-          lineHeight: "28px",
+          lineHeight: "22px",
           letterSpacing: "-0.02em",
         }}
       >
