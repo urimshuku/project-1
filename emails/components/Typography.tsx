@@ -101,16 +101,36 @@ export function LinkText({ href, children }: { href: string; children: ReactNode
   );
 }
 
+/** Renders plain text with explicit line breaks — email clients often ignore `white-space: pre-wrap` on `<p>`. */
+function TextWithExplicitLineBreaks({
+  children,
+  style,
+}: {
+  children: string;
+  style: CSSProperties;
+}) {
+  const lines = children.split("\n");
+  return (
+    <Text style={style}>
+      {lines.map((line, i) => (
+        <React.Fragment key={i}>
+          {i > 0 ? <br /> : null}
+          {line}
+        </React.Fragment>
+      ))}
+    </Text>
+  );
+}
+
 /** Preformatted block (schedules, IDs) — preserves line breaks. */
 export function PreBlock({ children }: { children: string }) {
   return (
-    <Text
+    <TextWithExplicitLineBreaks
       style={{
         fontFamily: fonts.body,
         color: emailSemantics.textBody,
         fontSize: "14px",
         lineHeight: "22px",
-        whiteSpace: "pre-wrap",
         margin: `0 0 ${spacing.md}`,
         padding: spacing.md,
         backgroundColor: "#F9FAFB",
@@ -119,24 +139,23 @@ export function PreBlock({ children }: { children: string }) {
       }}
     >
       {children}
-    </Text>
+    </TextWithExplicitLineBreaks>
   );
 }
 
 /** Monospace pre block (admin raw request dumps). */
 export function PreMono({ children }: { children: string }) {
   return (
-    <Text
+    <TextWithExplicitLineBreaks
       style={{
         fontFamily: fonts.mono,
         color: emailSemantics.textBody,
         fontSize: "13px",
         lineHeight: 1.45,
-        whiteSpace: "pre-wrap",
         margin: 0,
       }}
     >
       {children}
-    </Text>
+    </TextWithExplicitLineBreaks>
   );
 }
