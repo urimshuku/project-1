@@ -24,6 +24,9 @@ export function MarketingOptInCheckbox({ id, checked, onChange, variant = 'defau
         ? 'peer-focus:ring-[#d5a220]'
         : 'peer-focus:ring-blue-500';
 
+  /** Unchecked only — never combine with `bg-white` when checked or it overrides the fill color. */
+  const uncheckedBoxClass = 'border border-gray-300 bg-white';
+
   return (
     <div className="pt-1">
       <label htmlFor={id} className="flex items-start gap-3 cursor-pointer group">
@@ -42,7 +45,9 @@ export function MarketingOptInCheckbox({ id, checked, onChange, variant = 'defau
           />
           <span
             aria-hidden="true"
-            className={`pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded border border-gray-300 bg-white transition-colors peer-focus:ring-2 peer-focus:ring-offset-0 ${focusRingClass} ${checked ? checkedClass : ''}`}
+            className={`pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded transition-colors peer-focus:ring-2 peer-focus:ring-offset-0 ${focusRingClass} ${
+              checked ? checkedClass : uncheckedBoxClass
+            }`}
           >
             <svg
               viewBox="0 0 20 20"
