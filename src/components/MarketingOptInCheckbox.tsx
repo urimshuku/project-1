@@ -27,6 +27,10 @@ export function MarketingOptInCheckbox({ id, checked, onChange, variant = 'defau
   return (
     <div className="pt-1">
       <label htmlFor={id} className="flex items-start gap-3 cursor-pointer group">
+        {/*
+          `peer` must come before the styled sibling. Input is z-10 and receives clicks; visual is z-0,
+          pointer-events-none, so it cannot block toggling.
+        */}
         <span className="relative mt-0.5 h-4 w-4 shrink-0">
           <input
             id={id}
@@ -34,11 +38,11 @@ export function MarketingOptInCheckbox({ id, checked, onChange, variant = 'defau
             checked={checked}
             onChange={(e) => onChange(e.target.checked)}
             aria-describedby={`${id}-hint`}
-            className="peer absolute inset-0 z-10 h-4 w-4 cursor-pointer opacity-0"
+            className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0"
           />
           <span
             aria-hidden="true"
-            className={`flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white transition-colors peer-focus:ring-2 peer-focus:ring-offset-0 ${focusRingClass} ${checked ? checkedClass : ''}`}
+            className={`pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded border border-gray-300 bg-white transition-colors peer-focus:ring-2 peer-focus:ring-offset-0 ${focusRingClass} ${checked ? checkedClass : ''}`}
           >
             <svg
               viewBox="0 0 20 20"
