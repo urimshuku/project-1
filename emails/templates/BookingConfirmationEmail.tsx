@@ -2,7 +2,9 @@ import React from "npm:react@18.3.1";
 import EmailFooter from "../components/EmailFooter.tsx";
 import EmailLayout from "../components/EmailLayout.tsx";
 import EmailWordmark from "../components/EmailWordmark.tsx";
-import { H2, MultilineP, P } from "../components/Typography.tsx";
+import { H2, P } from "../components/Typography.tsx";
+import { EmailCardPlainText } from "../components/EmailCardPlainText.tsx";
+import { spacing } from "../theme.ts";
 
 export type BookingConfirmationEmailProps = {
   recipientName: string;
@@ -28,7 +30,7 @@ export default function BookingConfirmationEmail({
 
       <P>Thanks for your booking request. We received the details below:</P>
 
-      <MultilineP>{detailsBlock}</MultilineP>
+      <EmailCardPlainText text={detailsBlock} marginBottom={spacing.md} />
 
       <P>We will contact you shortly to confirm availability.</P>
 
