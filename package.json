@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "deploy:fn:book-venue": "supabase functions deploy book-venue",
-    "deploy:fn:approve-booking": "supabase functions deploy approve-booking --no-verify-jwt"
+    "deploy:fn:approve-booking": "supabase functions deploy approve-booking --no-verify-jwt",
+    "deploy:fn:newsletter-signup": "supabase functions deploy newsletter-signup"
   },
   "dependencies": {
     "@react-email/components": "^1.0.10",

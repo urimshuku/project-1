@@ -32,5 +32,5 @@ The frontend only needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see ro
 Redeploy affected functions so new invocations pick up env (or rely on platform refresh; redeploy is the safe default):
 
 ```bash
-supabase functions deploy book-venue join-activity paysera-pay-url unsubscribe-user email-preferences
+supabase functions deploy book-venue join-activity paysera-pay-url paysera-callback unsubscribe-user email-preferences approve-booking track-open track-click newsletter-signup
 ```
