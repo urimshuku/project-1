@@ -88,7 +88,7 @@ export function Footer() {
 
             <div className="mt-4 sm:mt-5 w-full">
               <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Join our newsletter</h2>
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2 w-full">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-row gap-2 w-full items-center">
                 <label htmlFor="footer-newsletter-email" className="sr-only">
                   Email address for newsletter
                 </label>
@@ -107,12 +107,12 @@ export function Footer() {
                     }
                   }}
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500"
                 />
                 <button
                   type="submit"
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="w-full sm:w-auto self-start rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe'}
                 </button>

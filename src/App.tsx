@@ -716,7 +716,7 @@ function App() {
                   €{generalCategory.current_amount.toLocaleString()}
                 </p>
               </div>
-              <div className="flex items-stretch gap-2">
+              <div className="flex items-stretch gap-2 mt-5 sm:mt-6">
                 <button
                   onClick={() => handleDonate(generalCategory)}
                   className="flex-1 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg"
