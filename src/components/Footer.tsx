@@ -86,8 +86,8 @@ export function Footer() {
               />
             </a>
 
-            <div className="mt-4 sm:mt-5 w-full">
-              <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Join our newsletter</h2>
+            <div className="mt-2 sm:mt-3 w-full">
+              <h2 className="text-xs font-normal text-gray-500 mb-2">Join our newsletter</h2>
               <form onSubmit={handleNewsletterSubmit} className="flex flex-row gap-2 w-full items-center">
                 <label htmlFor="footer-newsletter-email" className="sr-only">
                   Email address for newsletter
