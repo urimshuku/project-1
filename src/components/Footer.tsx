@@ -106,7 +106,7 @@ export function Footer() {
               <h2 className="text-xs font-normal text-gray-500 mb-1">Join our newsletter</h2>
               <form
                 onSubmit={handleNewsletterSubmit}
-                className="flex w-full max-w-[11.5rem] flex-row items-center gap-1.5 sm:max-w-[12.5rem]"
+                className="flex w-full max-w-[11.5rem] flex-row items-center gap-1.5 sm:max-w-full sm:gap-2"
               >
                 <label htmlFor="footer-newsletter-email" className="sr-only">
                   Email address for newsletter
@@ -126,19 +126,19 @@ export function Footer() {
                     }
                   }}
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs leading-snug text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs leading-snug text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm sm:leading-normal sm:focus:ring-2"
                 />
                 <button
                   type="submit"
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
                   aria-label={newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe to newsletter'}
                   aria-busy={newsletterStatus === 'loading'}
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-lg sm:p-2.5"
                 >
                   {newsletterStatus === 'loading' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" aria-hidden />
                   ) : (
-                    <NewsletterSubscribeIcon className="h-4 w-4 shrink-0" />
+                    <NewsletterSubscribeIcon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </form>
@@ -192,8 +192,10 @@ export function Footer() {
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
 
-            <p className="mt-3 sm:mt-4 text-right text-[10px] sm:text-xs text-gray-500">
-              © {new Date().getFullYear()} Studio Space. All rights reserved.
+            <p className="mt-3 sm:mt-4 text-right text-[10px] sm:text-xs text-gray-500 leading-relaxed">
+              © {new Date().getFullYear()} Studio Space.
+              <br />
+              All rights reserved.
             </p>
           </div>
         </div>
