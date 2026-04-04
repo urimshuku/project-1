@@ -88,7 +88,7 @@ export function Footer() {
     <footer className="bg-white border-t border-gray-200 mt-6 sm:mt-8 md:mt-10">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-10 md:py-12">
         <div className="flex flex-row justify-between items-start gap-3 sm:gap-6 md:gap-8">
-          {/* Logo + newsletter + copyright */}
+          {/* Logo + newsletter */}
           <div className="flex flex-col items-start flex-shrink-0 min-w-0 max-w-full sm:max-w-sm">
             <a
               href={import.meta.env.BASE_URL || '/'}
@@ -103,10 +103,10 @@ export function Footer() {
             </a>
 
             <div className="mt-2 sm:mt-3 w-full">
-              <h2 className="text-xs font-normal text-gray-500 mb-2">Join our newsletter</h2>
+              <h2 className="text-xs font-normal text-gray-500 mb-1">Join our newsletter</h2>
               <form
                 onSubmit={handleNewsletterSubmit}
-                className="flex w-full max-w-[16rem] flex-row items-center gap-2 sm:max-w-full"
+                className="flex w-full max-w-[11.5rem] flex-row items-center gap-1.5 sm:max-w-[12.5rem]"
               >
                 <label htmlFor="footer-newsletter-email" className="sr-only">
                   Email address for newsletter
@@ -126,19 +126,19 @@ export function Footer() {
                     }
                   }}
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs leading-snug text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500"
                 />
                 <button
                   type="submit"
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
                   aria-label={newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe to newsletter'}
                   aria-busy={newsletterStatus === 'loading'}
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {newsletterStatus === 'loading' ? (
-                    <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   ) : (
-                    <NewsletterSubscribeIcon className="h-5 w-5 shrink-0" />
+                    <NewsletterSubscribeIcon className="h-4 w-4 shrink-0" />
                   )}
                 </button>
               </form>
@@ -156,12 +156,6 @@ export function Footer() {
                 </p>
               )}
             </div>
-
-            <p className="text-[10px] sm:text-xs text-gray-500 mt-4 sm:mt-5 text-left">
-              © {new Date().getFullYear()} Studio Space.
-              <br />
-              All rights reserved.
-            </p>
           </div>
 
           <div className="flex flex-col items-end gap-1.5 sm:gap-3 md:gap-4 flex-shrink min-w-0">
