@@ -1,5 +1,21 @@
 import { useState } from 'react';
-import { MapPin, Phone, Instagram } from 'lucide-react';
+import { MapPin, Phone, Instagram, Loader2 } from 'lucide-react';
+
+/** Closed envelope, filled (Heroicons 24 solid “envelope” paths). */
+function NewsletterSubscribeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+      <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+    </svg>
+  );
+}
 
 const GOOGLE_MAPS_URL =
   'https://www.google.com/maps/place/Studio+Space/@42.6576438,21.173839,17z/data=!3m1!4b1!4m6!3m5!1s0x13549f002f3d4bd7:0x750c64afcadd83fa!8m2!3d42.6576439!4d21.1787099!16s%2Fg%2F11vsp44gl1?entry=ttu';
@@ -88,7 +104,10 @@ export function Footer() {
 
             <div className="mt-2 sm:mt-3 w-full">
               <h2 className="text-xs font-normal text-gray-500 mb-2">Join our newsletter</h2>
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-row gap-2 w-full items-center">
+              <form
+                onSubmit={handleNewsletterSubmit}
+                className="flex w-full max-w-[16rem] flex-row items-center gap-2 sm:max-w-full"
+              >
                 <label htmlFor="footer-newsletter-email" className="sr-only">
                   Email address for newsletter
                 </label>
@@ -112,9 +131,15 @@ export function Footer() {
                 <button
                   type="submit"
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="flex-shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe to newsletter'}
+                  aria-busy={newsletterStatus === 'loading'}
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-lg bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe'}
+                  {newsletterStatus === 'loading' ? (
+                    <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
+                  ) : (
+                    <NewsletterSubscribeIcon className="h-5 w-5 shrink-0" />
+                  )}
                 </button>
               </form>
               {!newsletterConfigured && (
