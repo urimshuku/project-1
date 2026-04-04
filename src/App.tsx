@@ -515,7 +515,7 @@ function App() {
       <div className="min-h-screen bg-gray-50 flex flex-col relative">
         <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
         <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} onDonateNow={handleDonateNow} />
+        <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} />
         <div className="flex-1 pb-12 overflow-x-hidden">
           <div className="mt-4 sm:mt-6 md:mt-8 pt-2 sm:pt-4 px-3 sm:px-4">
             <PaymentGateway
