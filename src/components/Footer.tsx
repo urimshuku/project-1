@@ -166,7 +166,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 sm:gap-2 text-gray-600 hover:text-gray-900 transition-colors text-xs sm:text-sm md:text-base"
             >
-              <span className="footer-link-underline text-right">
+              <span className="footer-link-underline text-right whitespace-nowrap sm:whitespace-normal">
                 M55H+CGH, Ymer Prizreni Rd, 10000
               </span>
               <MapPin className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
@@ -191,6 +191,10 @@ export function Footer() {
               <span className="footer-link-underline">Follow us on Instagram</span>
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
+
+            <p className="mt-3 sm:mt-4 text-right text-[10px] sm:text-xs text-gray-500">
+              © {new Date().getFullYear()} Studio Space. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
