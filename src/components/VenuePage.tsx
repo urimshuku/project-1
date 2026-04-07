@@ -84,20 +84,26 @@ export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
             </h2>
             <div className="max-w-3xl space-y-4 sm:space-y-5 text-base sm:text-lg text-gray-600 leading-relaxed">
               <p>
-                Studio Space began from a simple need: a room where people could come together without an agenda. A
-                place that wasn’t a café, an office, or a performance hall — somewhere in between, where the only
-                requirement was to show up.
+                Studio Space began from a simple need: a room where people could come together without an agenda. Not
+                a cafe, not a workplace, not a performance hall, but a space in between, where the only thing needed
+                is your presence.
               </p>
               <p>
-                It exists because we believe that gathering matters. That sitting in a circle, reading together,
-                watching a film, or simply sharing silence can change how we see ourselves and each other. The space
-                doesn’t promise outcomes; it offers presence.
+                It exists from a simple understanding: that to sit together, to listen, to observe, can change the way
+                we experience ourselves and others. Whether through a film, a book, a conversation, or silence,
+                something begins to open when we are simply willing to be here.
               </p>
               <p>
-                What it stands for is straightforward: openness over exclusivity, intention over habit, and care for
-                the place itself. The walls, the light, the way the room holds sound — all of it is part of the
-                invitation. Studio Space is run by people who care for it, and it continues because others choose to
-                show up and care too.
+                Nothing is promised here. No outcomes, no conclusions. Only the possibility of being a little more
+                present, a little more aware, a little more alive.
+              </p>
+              <p>
+                What it stands for is simple: openness instead of separation, attention instead of habit, and a certain
+                care for the space itself. The walls, the light, the way sound moves in the room, all of it matters.
+              </p>
+              <p>
+                Studio Space is held by those who care for it. It continues because others choose to come, to sit, and
+                to be part of it.
               </p>
             </div>
           </ScrollReveal>
