@@ -50,11 +50,14 @@ export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
               id="venue-intro-heading"
               className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900"
             >
-              Studio Space — The Space
+              Welcome to Studio Space
             </h1>
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-              A place for presence. Where people gather with intention, in openness, to meet one another and what
-              moves in them. Not a venue — a space that holds silence and speech, stillness and exchange.
+              Our cozy 45 sqm studio is designed for connection, creative unfolding, free expression, and meaningful
+              dialogue. Perfect for workshops, exhibitions, discussions, screenings, yoga, and meditation sessions.
+              <br />
+              <br />
+              A space to gather in stillness, truth, and openness.
             </p>
             <div className="mt-8 sm:mt-10 md:mt-12 overflow-hidden rounded-xl sm:rounded-2xl shadow-lg transition-shadow duration-200 ease-out hover:shadow-xl">
               <img
