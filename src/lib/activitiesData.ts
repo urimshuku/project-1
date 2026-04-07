@@ -7,7 +7,7 @@ export interface ActivitySection {
   id: string;
   title: string;
   description: string;
-  /** Optional list items (e.g. for Spiritual Events) */
+  /** Optional list items (e.g. for Classes & Gatherings) */
   listItems?: string[];
   images: CarouselImage[];
 }
@@ -45,19 +45,19 @@ export const ACTIVITIES: ActivitySection[] = [
   },
   {
     id: 'spiritual-events',
-    title: 'Spiritual Events',
+    title: 'Classes & Gatherings',
     description:
-      'A variety of gatherings for reflection and practice, including spiritual talks, yoga, full moon and new moon rituals, and chanting sessions. All are welcome.',
+      'A range of sessions that invite attention, movement, and shared presence. From yoga and somatic work to talks, moon gatherings, and collective singing, each offering opens a space to engage more consciously with yourself and others. All are welcome.',
     listItems: [
-      'Spiritual talks',
-      'Yoga',
-      'Full moon rituals',
-      'New moon rituals',
-      'Chanting sessions',
+      'Open Conversations',
+      'Classical Hatha Yoga',
+      'Full moon gatherings',
+      'New moon gatherings',
+      'Collective singing',
     ],
     images: [1, 2, 3, 4, 5].map((n) => ({
-      src: placeholder('Spiritual Events', n),
-      alt: `Spiritual Events ${n}`,
+      src: placeholder('Classes & Gatherings', n),
+      alt: `Classes & Gatherings ${n}`,
     })),
   },
 ];
