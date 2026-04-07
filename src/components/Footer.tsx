@@ -116,7 +116,7 @@ export function Footer() {
                   type="email"
                   name="email"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder="Your email"
                   value={newsletterEmail}
                   onChange={(e) => {
                     setNewsletterEmail(e.target.value);
