@@ -2,6 +2,7 @@ import type { CarouselImage } from '../components/ActivityCarousel';
 
 const placeholder = (activity: string, n: number) =>
   `https://placehold.co/800x450/e5e7eb/6b7280?text=${encodeURIComponent(activity + ' ' + n)}`;
+const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
 export interface ActivitySection {
   id: string;
@@ -18,9 +19,9 @@ export const ACTIVITIES: ActivitySection[] = [
     title: 'Book Club',
     description:
       'A regular gathering for reading and discussion. We choose books together and meet to share reflections and conversation in a relaxed, welcoming setting.',
-    images: [1, 2, 3, 4, 5].map((n) => ({
-      src: placeholder('Book Club', n),
-      alt: `Book Club ${n}`,
+    images: [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+      src: `${base}/images/book-club/book-club-reading-circle-${n}.png`,
+      alt: `Book Club reading circle ${n}`,
     })),
   },
   {
