@@ -29,8 +29,8 @@ export const ACTIVITIES: ActivitySection[] = [
     title: 'Local Neighborhood Cleaning',
     description:
       'Community clean-up sessions in our neighborhood. We meet to pick up litter, care for shared spaces, and connect with neighbors who want to make the area a better place for everyone.',
-    images: [1, 2, 3, 4, 5].map((n) => ({
-      src: placeholder('Neighborhood Cleaning', n),
+    images: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
+      src: `${base}/images/neighborhood-cleaning/neighborhood-cleaning-${n}.png`,
       alt: `Local Neighborhood Cleaning ${n}`,
     })),
   },
@@ -39,9 +39,9 @@ export const ACTIVITIES: ActivitySection[] = [
     title: 'Films & Documentaries',
     description:
       'Screening evenings for films and documentaries, followed by optional discussion. A space to watch together and reflect on the stories that move us.',
-    images: [1, 2, 3, 4, 5].map((n) => ({
-      src: placeholder('Films & Documentaries', n),
-      alt: `Films & Documentaries ${n}`,
+    images: [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+      src: `${base}/images/films-documentaries/films-documentaries-screening-${n}.png`,
+      alt: `Films & Documentaries screening ${n}`,
     })),
   },
   {

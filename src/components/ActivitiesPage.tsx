@@ -10,6 +10,9 @@ interface ActivitiesPageProps {
   onJoinNow?: () => void;
 }
 
+const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+const WORKSHOP_PREVIEW = `${base}/images/workshop/workshop-preview.png`;
+
 export function ActivitiesPage({ onBackToEntry, onJoinNow }: ActivitiesPageProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
@@ -106,10 +109,17 @@ export function ActivitiesPage({ onBackToEntry, onJoinNow }: ActivitiesPageProps
               >
                 Workshops
               </h2>
-              <div className="mt-4 sm:mt-6 md:mt-8 bg-gray-100 rounded-lg py-8 sm:py-10 px-4 sm:px-6 text-center">
-                <p className="text-gray-500 text-sm sm:text-base font-medium">
-                  Coming Soon
-                </p>
+              <div className="mt-4 sm:mt-6 md:mt-8 relative w-full max-w-4xl mx-auto overflow-hidden rounded-xl sm:rounded-2xl shadow-lg aspect-video bg-gray-200">
+                <img
+                  src={WORKSHOP_PREVIEW}
+                  alt="Embroidery workshop"
+                  className="absolute inset-0 h-full w-full object-cover grayscale"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/35 px-4">
+                  <p className="text-center text-2xl sm:text-3xl md:text-4xl font-semibold tracking-wide text-white drop-shadow-md">
+                    Coming Soon!
+                  </p>
+                </div>
               </div>
             </ScrollReveal>
           </section>
