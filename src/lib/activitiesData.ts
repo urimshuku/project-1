@@ -19,7 +19,7 @@ export const ACTIVITIES: ActivitySection[] = [
     title: 'Book Club',
     description:
       'A regular gathering for reading and discussion. We choose books together and meet to share reflections and conversation in a relaxed, welcoming setting.',
-    images: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+    images: [1, 2, 3, 4, 5, 6, 7].map((n) => ({
       src: `${base}/images/book-club/book-club-reading-circle-${n}.png`,
       alt: `Book Club reading circle ${n}`,
     })),
