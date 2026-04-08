@@ -76,6 +76,7 @@ export function ActivityCarousel({ images, label = 'Gallery' }: ActivityCarousel
                     alt={image.alt}
                     className="w-full h-full"
                     imgClassName="object-cover"
+                    eager={i === 0}
                   />
                 ) : (
                   <span className="carousel-caption--subtle">

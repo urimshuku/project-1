@@ -64,6 +64,8 @@ export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
                 src={INTRO_IMAGE}
                 alt="The studio space"
                 className="w-full aspect-[16/9] sm:aspect-[3/2] object-cover border border-gray-100"
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
           </ScrollReveal>

@@ -56,8 +56,8 @@ export const ACTIVITIES: ActivitySection[] = [
       'New moon gatherings',
       'Collective singing',
     ],
-    images: [1, 2, 3, 4, 5].map((n) => ({
-      src: placeholder('Classes & Gatherings', n),
+    images: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
+      src: `${base}/images/classes-gatherings/classes-gatherings-${n}.png`,
       alt: `Classes & Gatherings ${n}`,
     })),
   },
