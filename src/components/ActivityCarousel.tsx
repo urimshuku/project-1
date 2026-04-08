@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { StudioImage } from './StudioImage';
 
 export interface CarouselImage {
   src: string;
@@ -68,12 +69,13 @@ export function ActivityCarousel({ images, label = 'Gallery' }: ActivityCarousel
         >
           {images.map((image, i) => (
             <div key={i} className="min-w-full">
-              <div className="w-full aspect-video bg-gray-200 flex items-center justify-center overflow-hidden">
+              <div className="relative w-full aspect-video bg-gray-200 flex items-center justify-center overflow-hidden">
                 {image.src ? (
-                  <img
+                  <StudioImage
                     src={image.src}
                     alt={image.alt}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
+                    imgClassName="object-cover"
                   />
                 ) : (
                   <span className="carousel-caption--subtle">
