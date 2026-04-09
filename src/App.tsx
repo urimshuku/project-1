@@ -572,16 +572,37 @@ function App() {
           </ScrollReveal>
           <ScrollReveal className="space-y-3 sm:space-y-4 max-w-3xl mx-auto">
             <p className="text-base sm:text-lg text-gray-600">
-              Until now, Studio Space has been run by volunteers, and most gatherings have been offered free of charge. The space now needs renovations so it can continue to exist, grow, and welcome people safely.
+              Studio Space has, until now, been held and run by volunteers. Most gatherings have been offered freely,
+              sustained by care, time, and a shared wish to keep the space open.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              Your donation helps care for the space and supports cultural, educational, and creative gatherings.
+              Over time, the space has begun to require more than what we can maintain on our own.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              Every contribution helps keep this space open for community, reflection, and shared moments. If Studio Space resonates with you, we warmly invite you to support it.
+              As you may see in the photos, part of the roof is damaged, causing water leakage that has affected the
+              walls and ceiling. To properly care for the space, we need to repair the roof, replace windows where
+              needed, and insulate the walls to prevent further damage.
+            </p>
+            <p className="text-base sm:text-lg text-gray-600">
+              There is also an additional area of around 8m² that is currently not in use. This space requires more
+              extensive work, including insulation, proper water drainage, and basic restoration so it can become part
+              of the studio.
+            </p>
+            <p className="text-base sm:text-lg text-gray-600">
+              Some repairs are also needed in the bathroom to ensure the space remains functional and safe.
+            </p>
+            <p className="text-base sm:text-lg text-gray-600">
+              These are not surface improvements, but necessary structural repairs so the space can continue to exist
+              and welcome people.
+            </p>
+            <p className="text-base sm:text-lg text-gray-600">
+              Your support helps us take care of what holds all of this.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
               To complete the needed renovations, Studio Space is raising <strong>14,327 €</strong>.
+            </p>
+            <p className="text-base sm:text-lg text-gray-600">
+              If this space resonates with you, you are warmly invited to support it.
             </p>
           </ScrollReveal>
         </div>
