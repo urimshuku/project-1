@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+
 export function ImageCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // Placeholder images - replace these with actual image URLs later
-  const images = [
-    { id: 1, src: '', alt: 'Studio Space Photo 1' },
-    { id: 2, src: '', alt: 'Studio Space Photo 2' },
-    { id: 3, src: '', alt: 'Studio Space Photo 3' },
-    { id: 4, src: '', alt: 'Studio Space Photo 4' },
-    { id: 5, src: '', alt: 'Studio Space Photo 5' },
-  ];
+
+  const images = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+    id: n,
+    src: `${base}/images/donations-renovation/studio-space-renovation-${n}.png`,
+    alt: `Studio Space renovation ${n}`,
+  }));
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -66,7 +65,7 @@ export function ImageCarousel() {
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {images.map((image) => (
+          {images.map((image, index) => (
             <div key={image.id} className="min-w-full relative">
               <div className="w-full aspect-video bg-gray-200 flex items-center justify-center">
                 {image.src ? (
@@ -74,6 +73,9 @@ export function ImageCarousel() {
                     src={image.src}
                     alt={image.alt}
                     className="w-full h-full object-cover"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    decoding="async"
                   />
                 ) : (
                   <span className="carousel-caption--subtle">

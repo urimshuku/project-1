@@ -6,6 +6,7 @@ const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 const heroImages = [
   `${base}/venue-photo.png`,
   `${base}/images/workshop/workshop-preview.png`,
+  `${base}/images/donations-renovation/studio-space-renovation-1.png`,
 ];
 
 /**
