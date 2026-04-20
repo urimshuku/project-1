@@ -87,27 +87,29 @@ export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
             </h2>
             <div className="max-w-3xl space-y-4 sm:space-y-5 text-base sm:text-lg text-gray-600 leading-relaxed">
               <p>
-                Studio Space began from a simple need: a room where people could come together without an agenda. Not
-                a cafe, not a workplace, not a performance hall, but a space in between, where the only thing needed
-                is your presence.
+                Over time, it became a space where many small things happen. Films are watched, books are discussed,
+                conversations begin, music is shared, silence is held. None of these define it, yet all of them
+                belong.
               </p>
               <p>
-                It exists from a simple understanding: that to sit together, to listen, to observe, can change the way
-                we experience ourselves and others. Whether through a film, a book, a conversation, or silence,
-                something begins to open when we are simply willing to be here.
+                What holds it together is something quieter. A sense of ease. The feeling that you do not have to
+                arrive prepared, or leave changed. You can just be here, in your own way, at your own pace.
               </p>
               <p>
-                Nothing is promised here. No outcomes, no conclusions. Only the possibility of being a little more
-                present, a little more aware, a little more alive.
+                Nothing is promised here. No outcomes, no conclusions, no becoming. Just the possibility of meeting
+                life a little more directly.
               </p>
               <p>
-                What it stands for is simple: openness instead of separation, attention instead of habit, and a certain
-                care for the space itself. The walls, the light, the way sound moves in the room, all of it matters.
+                There is a kind of playfulness in that. Not something we try to create, but something that appears
+                when there is no pressure. In that sense, it carries the spirit of leela, life expressing itself
+                freely, without needing to justify itself.
               </p>
               <p>
-                Studio Space is held by those who care for it. It continues because others choose to come, to sit, and
-                to be part of it.
+                People come and go, each bringing something unseen, something felt. And slowly, a space like this
+                takes shape. Not built by design, but by presence.
               </p>
+              <p>It continues because it is lived.</p>
+              <p>And you are welcome in it.</p>
             </div>
           </ScrollReveal>
         </section>
