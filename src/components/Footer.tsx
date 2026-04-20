@@ -98,7 +98,7 @@ export function Footer() {
               <img
                 src={`${import.meta.env.BASE_URL}logo-entry.svg`}
                 alt="Studio Space logo"
-                className="h-12 sm:h-16 md:h-20 w-auto"
+                className="h-12 sm:h-16 md:h-20 w-auto md:origin-top-left md:scale-[1.25]"
               />
             </a>
 
