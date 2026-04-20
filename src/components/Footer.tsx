@@ -102,7 +102,7 @@ export function Footer() {
               />
             </a>
 
-            <div className="mt-2 sm:mt-3 w-full">
+            <div className="mt-2 sm:mt-3 md:mt-7 w-full">
               <h2 className="text-xs font-normal text-gray-500 mb-1">Join our newsletter</h2>
               <form
                 onSubmit={handleNewsletterSubmit}
@@ -192,7 +192,7 @@ export function Footer() {
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
 
-            <p className="mt-3 sm:mt-4 text-right text-[10px] sm:text-xs text-gray-500 leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-right text-[9px] sm:text-[11px] text-gray-500 leading-relaxed">
               © 2026 Studio Space. All rights reserved.
               <br />
               Powered by United Human Beings (UHB)
