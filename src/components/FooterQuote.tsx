@@ -12,6 +12,7 @@ export function FooterQuote({ color = '#c95b2d' }: FooterQuoteProps) {
   const [charIndex, setCharIndex] = useState(0);
   const [showHeart, setShowHeart] = useState(false);
   const [started, setStarted] = useState(false);
+  const [fontReady, setFontReady] = useState(false);
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -28,14 +29,39 @@ export function FooterQuote({ color = '#c95b2d' }: FooterQuoteProps) {
   }, []);
 
   useEffect(() => {
-    if (!started) return;
+    if (typeof document === 'undefined' || !('fonts' in document)) {
+      setFontReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    const face = "1em 'Reenie Beanie'";
+    const markReady = () => {
+      if (!cancelled) setFontReady(true);
+    };
+
+    if (document.fonts.check(face)) {
+      markReady();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    document.fonts.load(face).then(markReady).catch(markReady);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!started || !fontReady) return;
     if (charIndex >= QUOTE.length) {
       setShowHeart(true);
       return;
     }
     const t = setTimeout(() => setCharIndex((c) => c + 1), CHAR_DELAY_MS);
     return () => clearTimeout(t);
-  }, [started, charIndex]);
+  }, [started, fontReady, charIndex]);
 
   return (
     <footer ref={ref} className="mt-12 sm:mt-16 md:mt-20 pb-8 sm:pb-12 text-center relative">
@@ -55,8 +81,8 @@ export function FooterQuote({ color = '#c95b2d' }: FooterQuoteProps) {
             className="text-2xl sm:text-[1.65rem] md:text-[1.65rem] lg:text-[1.65rem] max-w-3xl mx-auto"
             style={{ color, fontFamily: "'Reenie Beanie', cursive" }}
           >
-            {QUOTE.slice(0, charIndex)}
-            {charIndex < QUOTE.length && (
+            {fontReady && QUOTE.slice(0, charIndex)}
+            {fontReady && charIndex < QUOTE.length && (
               <span
                 className="inline-block w-0.5 h-[1em] align-baseline ml-0.5 animate-pulse"
                 style={{ backgroundColor: color }}
@@ -64,7 +90,7 @@ export function FooterQuote({ color = '#c95b2d' }: FooterQuoteProps) {
               />
             )}
           </p>
-          {showHeart && (
+          {fontReady && showHeart && (
             <svg
               className="mx-auto mt-4 w-8 h-8 sm:w-10 sm:h-10 heart-slide-up"
               viewBox="0 0 24 24"
