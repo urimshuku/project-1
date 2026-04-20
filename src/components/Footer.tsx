@@ -193,9 +193,9 @@ export function Footer() {
             </a>
 
             <p className="mt-3 sm:mt-4 text-right text-[10px] sm:text-xs text-gray-500 leading-relaxed">
-              © {new Date().getFullYear()} Studio Space.
+              © 2026 Studio Space. All rights reserved.
               <br />
-              All rights reserved.
+              Powered by United Human Beings (UHB)
             </p>
           </div>
         </div>
