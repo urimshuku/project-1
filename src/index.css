@@ -163,8 +163,30 @@
   }
 
   .theme-checkbox-native {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    vertical-align: middle;
     background-color: #ffffff;
-    border-color: #9ca3af;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border: 1px solid #9ca3af;
+    border-radius: 0.125rem;
+  }
+
+  .theme-checkbox-native:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3.5 8.2 6.4 11 12.5 5' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+  }
+
+  .theme-checkbox-native:disabled {
+    opacity: 1;
+    cursor: not-allowed;
   }
 }
 
@@ -273,11 +295,17 @@ html.dark select:disabled {
 html.dark input.theme-checkbox-native {
   background-color: #ffffff;
   border-color: #ffffff;
+  color: #2563eb;
 }
 
 html.dark input.theme-checkbox-native:disabled {
   background-color: #ffffff;
   border-color: #ffffff;
+}
+
+html.dark input.theme-checkbox-native:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
 }
 
 html.dark code.bg-gray-100 {
