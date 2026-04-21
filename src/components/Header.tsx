@@ -25,6 +25,9 @@ interface HeaderProps {
 
 export function Header({ onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNow, logoVariant = 'donations', onLogoClick }: HeaderProps) {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  const actionButtonClass =
+    'flex items-center gap-1 sm:gap-2 text-white font-bold py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-md sm:rounded-lg text-xs sm:text-base transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105 active:scale-100';
+  const actionIconClass = 'w-2.5 h-2.5 sm:w-3.5 sm:h-3.5';
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,13 +64,13 @@ export function Header({ onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNo
             <button
               type="button"
               onClick={onJoinNow}
-              className="flex items-center gap-1.5 sm:gap-2 text-white font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105 active:scale-100"
+              className={actionButtonClass}
               style={{ backgroundColor: '#4DA1A9' }}
               aria-label="Join Now"
             >
               <svg
                 viewBox="0 0 24 24"
-                className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                className={actionIconClass}
                 aria-hidden
               >
                 {/* Extra-thick filled plus sign */}
@@ -83,11 +86,11 @@ export function Header({ onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNo
             <button
               type="button"
               onClick={onBookNow}
-              className="flex items-center gap-1.5 sm:gap-2 text-white font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105 active:scale-100"
+              className={actionButtonClass}
               style={{ backgroundColor: '#d5a220' }}
               aria-label="Host Now"
             >
-              <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white text-white" aria-hidden />
+              <Calendar className={`${actionIconClass} fill-white text-white`} aria-hidden />
               Host Now
             </button>
           )}
@@ -95,11 +98,11 @@ export function Header({ onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNo
             <button
               type="button"
               onClick={onDonateNow}
-              className="flex items-center gap-1.5 sm:gap-2 text-white font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105 active:scale-100"
+              className={actionButtonClass}
               style={{ backgroundColor: '#c95b2d' }}
               aria-label="Donate now"
             >
-              <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" aria-hidden />
+              <Heart className={`${actionIconClass} fill-current`} aria-hidden />
               Donate Now
             </button>
           )}

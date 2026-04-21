@@ -1,5 +1,3 @@
-import { ArrowLeft } from 'lucide-react';
-
 interface BackButtonProps {
   onClick: () => void;
   className?: string;
@@ -7,14 +5,20 @@ interface BackButtonProps {
 }
 
 export function BackButton({ onClick, className = '', ariaLabel = 'Back to Home' }: BackButtonProps) {
+  const arrowBackSrc = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center justify-center rounded-lg p-1.5 text-black opacity-35 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 ${className}`}
+      className={`inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity ${className}`}
       aria-label={ariaLabel}
     >
-      <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} aria-hidden />
+      <img
+        src={arrowBackSrc}
+        alt=""
+        className="block h-6 w-6 object-contain opacity-35 dark:opacity-70 dark:invert sm:h-7 sm:w-7"
+      />
     </button>
   );
 }

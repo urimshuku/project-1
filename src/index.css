@@ -161,6 +161,11 @@
     background-color: var(--color-surface-muted);
     color: var(--color-text);
   }
+
+  .theme-checkbox-native {
+    background-color: #ffffff;
+    border-color: #9ca3af;
+  }
 }
 
 /* Compatibility layer for existing Tailwind color utilities during the theme pass. */
@@ -263,6 +268,16 @@ html.dark textarea:disabled,
 html.dark select:disabled {
   background-color: var(--color-surface-muted);
   color: var(--color-text-muted);
+}
+
+html.dark input.theme-checkbox-native {
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+html.dark input.theme-checkbox-native:disabled {
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
 html.dark code.bg-gray-100 {

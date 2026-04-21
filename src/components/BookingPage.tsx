@@ -946,7 +946,7 @@ export function BookingPage({ onBackToEntry, onLogoHome }: BookingPageProps) {
                 <input
                   id="booking-custom-per-day"
                   type="checkbox"
-                  className="mt-1 shrink-0"
+                  className="theme-checkbox-native mt-1 shrink-0"
                   checked={customPerDay}
                   disabled={selectedDates.length < 2}
                   onChange={(e) => {

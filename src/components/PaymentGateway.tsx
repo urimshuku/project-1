@@ -212,7 +212,7 @@ export function PaymentGateway({ category, onBack }: PaymentGatewayProps) {
                 type="checkbox"
                 checked={isAnonymous}
                 onChange={(e) => setIsAnonymous(e.target.checked)}
-                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                className="theme-checkbox-native w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
               />
               <span className="text-xs sm:text-sm text-gray-600">Donate anonymously</span>
             </label>
