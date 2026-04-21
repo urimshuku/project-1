@@ -106,7 +106,7 @@ export function BookingCalendar({
       const a = start < end ? start : end;
       const b = start < end ? end : start;
       const inRange: string[] = [];
-      let d = parseKey(a);
+      const d = parseKey(a);
       const endD = parseKey(b);
       while (d <= endD) {
         const k = toKey(d);
@@ -188,18 +188,18 @@ export function BookingCalendar({
         <button
           type="button"
           onClick={goPrev}
-          className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-lg text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
           aria-label="Previous month"
         >
           <span className="text-lg leading-none">‹</span>
         </button>
-        <span className="text-base font-semibold text-gray-900 min-w-[160px] text-center">
+        <span className="min-w-[160px] text-center text-base font-semibold text-[var(--color-text)]">
           {monthLabel}
         </span>
         <button
           type="button"
           onClick={goNext}
-          className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-lg text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
           aria-label="Next month"
         >
           <span className="text-lg leading-none">›</span>
@@ -214,7 +214,7 @@ export function BookingCalendar({
         {WEEKDAYS.map((wd) => (
           <div
             key={wd}
-            className="text-center text-xs sm:text-sm font-medium text-gray-500 py-1"
+            className="py-1 text-center text-xs font-medium text-[var(--color-text-muted)] sm:text-sm"
           >
             {wd}
           </div>
@@ -237,8 +237,8 @@ export function BookingCalendar({
           const highlighted = selected || (inRange && dragStart !== null);
 
           const baseCell =
-            'w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base transition-colors';
-          let cellClass = `${baseCell} text-gray-900`;
+            'w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm sm:text-base transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-page)]';
+          let cellClass = `${baseCell} text-[var(--color-text)]`;
           if (highlighted) {
             cellClass += ' bg-black text-white cursor-pointer';
           } else if (blocked) {
@@ -246,7 +246,7 @@ export function BookingCalendar({
           } else if (disabled) {
             cellClass += ' opacity-50 cursor-not-allowed';
           } else {
-            cellClass += ' cursor-pointer hover:bg-gray-200';
+            cellClass += ' cursor-pointer hover:bg-[var(--color-surface-muted)]';
           }
 
           return (
@@ -269,7 +269,7 @@ export function BookingCalendar({
           );
         })}
       </div>
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="mt-2 text-xs text-[var(--color-text-muted)]">
         Click dates to select one by one, or drag to select a range.
         {blockedDates && blockedDates.size > 0 ? ' Grey days are already booked.' : ''}
       </p>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Category } from '../lib/types';
 import { PERSON_NAME_INPUT_ATTRS, sanitizePersonNameInput } from '../lib/sanitizePersonName';
+import { BackButton } from './BackButton';
 import { MarketingOptInCheckbox } from './MarketingOptInCheckbox';
 
 interface PaymentGatewayProps {
@@ -17,7 +18,7 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayProps) {
+export function PaymentGateway({ category, onBack }: PaymentGatewayProps) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState('');
@@ -122,18 +123,8 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
   if (!supabaseUrl || !supabaseAnonKey) {
     return (
       <div className="max-w-2xl mx-auto px-1 sm:px-0">
-        <button
-          onClick={onBack}
-          className="mb-4 sm:mb-6 inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
-          aria-label="Back to Home"
-        >
-          <img
-            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`}
-            alt=""
-            className="w-6 h-6 sm:w-7 sm:h-7 object-contain block opacity-35"
-          />
-        </button>
-        <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+        <BackButton onClick={onBack} className="mb-4 sm:mb-6" />
+        <div className="theme-surface rounded-xl shadow-xl p-6 border border-gray-100">
           <p className="text-gray-600 mb-2">Checkout is not configured.</p>
           <p className="text-sm text-gray-600">
             Set <code className="bg-gray-100 px-1 rounded">VITE_SUPABASE_URL</code> and{' '}
@@ -146,19 +137,9 @@ export function PaymentGateway({ category, onBack, onSuccess }: PaymentGatewayPr
 
   return (
     <div className="max-w-2xl mx-auto px-1 sm:px-0">
-      <button
-        onClick={onBack}
-        className="mb-4 sm:mb-6 inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
-        aria-label="Back to Home"
-      >
-        <img
-          src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`}
-          alt=""
-          className="w-6 h-6 sm:w-7 sm:h-7 object-contain block opacity-35"
-        />
-      </button>
+      <BackButton onClick={onBack} className="mb-4 sm:mb-6" />
 
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-100">
+      <div className="theme-surface rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-100">
         <div className="mb-5 sm:mb-6 md:mb-8">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Support {category.name}

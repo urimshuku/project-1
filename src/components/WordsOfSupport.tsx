@@ -79,7 +79,7 @@ export function WordsOfSupport() {
         <ScrollReveal fadeOnly>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 mt-4 sm:mt-6 md:mt-8">Words of Support</h2>
         </ScrollReveal>
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
+        <div className="theme-surface rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-gray-200 rounded w-3/4" />
             <div className="h-4 bg-gray-200 rounded w-full" />
@@ -103,7 +103,7 @@ export function WordsOfSupport() {
         </h2>
       </ScrollReveal>
       <ScrollReveal>
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
+        <div className="theme-surface rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
           {entries.length === 0 ? (
             <p className="text-gray-500 text-sm sm:text-base">
               No messages yet. Leave a note when you donate to show your support.

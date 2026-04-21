@@ -96,7 +96,7 @@ export function AllDonors() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+      <div className="theme-surface rounded-2xl shadow-md p-8 border border-gray-100">
         <div className="animate-pulse space-y-3">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-6" />
           <div className="h-4 bg-gray-200 rounded w-full" />
@@ -119,7 +119,7 @@ export function AllDonors() {
           Contributors
         </h2>
       </ScrollReveal>
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
+      <div className="theme-surface rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 transition-shadow duration-200 ease-out hover:shadow-xl">
         <ScrollReveal>
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             <span
@@ -132,10 +132,9 @@ export function AllDonors() {
             <button
               type="button"
               onClick={() => setViewMode((m) => (m === 'chronological' ? 'top' : 'chronological'))}
-              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#c95b2d] focus:ring-offset-2 focus:ring-offset-[var(--color-page)]"
               style={{
                 backgroundColor: viewMode === 'top' ? '#c95b2d' : '#d1d5db',
-                focusRingColor: '#c95b2d',
               }}
               role="switch"
               aria-checked={viewMode === 'top'}

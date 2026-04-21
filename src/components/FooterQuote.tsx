@@ -4,7 +4,7 @@ const QUOTE = 'Thank you for being part of making this space continue to exist a
 const CHAR_DELAY_MS = 25;
 
 interface FooterQuoteProps {
-  /** Text and heart color. Default: donations orange (#c95b2d). Use #d5a220 for venue. */
+  /** Text and heart color. Default: donations orange. Use #d5a220 for venue. */
   color?: string;
 }
 

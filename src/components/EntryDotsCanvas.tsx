@@ -4,6 +4,7 @@
  * Respects prefers-reduced-motion (static dots, no mouse).
  */
 import { useEffect, useRef } from 'react';
+import { useTheme } from '../lib/theme';
 
 const DOT_COUNT = 100;
 const DOT_RADIUS = 1.5; // 2–3px
@@ -55,6 +56,7 @@ export function EntryDotsCanvas({
   opacityScale = 1,
   speedScale = 1,
 }: EntryDotsCanvasProps) {
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Dot[] | null>(null);
   const rafRef = useRef<number>(0);
@@ -74,6 +76,8 @@ export function EntryDotsCanvas({
     if (!ctx) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dotRgb = theme === 'dark' ? '212, 212, 216' : '90, 70, 50';
+    const baseAlpha = theme === 'dark' ? 0.24 : DEFAULT_ALPHA;
     if (prefersReducedMotion) {
       dotsRef.current = initDots();
       const drawStatic = () => {
@@ -81,7 +85,7 @@ export function EntryDotsCanvas({
         const h = canvas.height;
         ctx.clearRect(0, 0, w, h);
         const dots = dotsRef.current!;
-        ctx.fillStyle = `rgba(90, 70, 50, ${DEFAULT_ALPHA * opacityRef.current})`;
+        ctx.fillStyle = `rgba(${dotRgb}, ${baseAlpha * opacityRef.current})`;
         for (let i = 0; i < dots.length; i++) {
           const d = dots[i];
           const x = d.baseX * w;
@@ -118,7 +122,7 @@ export function EntryDotsCanvas({
       const tScaled = t * speedScaleRef.current;
 
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = `rgba(90, 70, 50, ${DEFAULT_ALPHA * opacityRef.current})`;
+      ctx.fillStyle = `rgba(${dotRgb}, ${baseAlpha * opacityRef.current})`;
 
       const m = mouseRef.current;
       const mx = m?.x ?? -9999;
@@ -161,7 +165,7 @@ export function EntryDotsCanvas({
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', setSize);
     };
-  }, []);
+  }, [theme]);
 
   return (
     <canvas

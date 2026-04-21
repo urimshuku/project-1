@@ -1,6 +1,7 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Share2 } from 'lucide-react';
 import { Header } from './components/Header';
+import { BackButton } from './components/BackButton';
 import { PaymentGateway } from './components/PaymentGateway';
 import { SuccessPage } from './components/SuccessPage';
 import { CancelPage } from './components/CancelPage';
@@ -20,7 +21,18 @@ import { Footer } from './components/Footer';
 import { supabase } from './lib/supabase';
 import type { Category } from './lib/types';
 
-type Page = 'entry' | 'home' | 'payment' | 'success' | 'cancel' | 'activities' | 'booking' | 'venue' | 'join';
+type Page =
+  | 'entry'
+  | 'home'
+  | 'payment'
+  | 'success'
+  | 'cancel'
+  | 'activities'
+  | 'booking'
+  | 'venue'
+  | 'join'
+  | 'unsubscribe'
+  | 'email-preferences';
 
 /** First path segments that are real app routes, not GitHub Pages repo bases (e.g. /studio-space). */
 const TOP_LEVEL_APP_SEGMENTS = new Set([
@@ -395,11 +407,6 @@ function App() {
     setSelectedCategory(null);
   };
 
-  const handleGoHome = () => {
-    setCurrentPage('home');
-    setSelectedCategory(null);
-  };
-
   // Use DB categories when present, but always merge in any default category that's missing (e.g. Workshop Tables)
   const rawCategories =
     categories.length > 0
@@ -456,7 +463,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen theme-page flex flex-col">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div
@@ -512,7 +519,7 @@ function App() {
 
   if (currentPage === 'payment' && selectedCategory) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col relative">
+      <div className="min-h-screen theme-page flex flex-col relative">
         <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
         <div className="relative z-10 flex flex-col flex-1 min-h-0">
         <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} />
@@ -543,27 +550,19 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col relative">
+    <div className="min-h-screen theme-page flex flex-col relative">
       <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
       <Header selectedTab={selectedTab} onTabChange={handleTabChange} onLogoClick={handleBackToEntry} onDonateNow={handleDonateNow} />
       <div className="flex-1">
       <div className="max-w-7xl mx-auto px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12">
-        <button
-          type="button"
+        <BackButton
           onClick={() => {
             handleBackToEntry();
             window.scrollTo(0, 0);
           }}
-          className="mb-4 sm:mb-6 ml-4 sm:ml-5 inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
-          aria-label="Back to Home"
-        >
-          <img
-            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`}
-            alt=""
-            className="w-6 h-6 sm:w-7 sm:h-7 object-contain block opacity-35"
-          />
-        </button>
+          className="mb-4 sm:mb-6 ml-4 sm:ml-5"
+        />
         <div className="mb-6 sm:mb-8 md:mb-12 text-center">
           <ScrollReveal fadeOnly>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-8">
@@ -648,8 +647,8 @@ function App() {
                   id={`category-${category.id}`}
                   className={`rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 flex flex-col gap-4 sm:gap-6 transition-shadow duration-200 ease-out hover:shadow-xl ${
                     isCompleted
-                      ? 'bg-gray-100 opacity-75 pointer-events-none'
-                      : 'bg-white'
+                      ? 'theme-surface-muted opacity-75 pointer-events-none'
+                      : 'theme-surface'
                   }`}
                 >
                   <ScrollReveal>
@@ -722,7 +721,7 @@ function App() {
         {generalCategory && (
           <section
             id={`category-${generalCategory.id}`}
-            className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8 md:mb-12 transition-shadow duration-200 ease-out hover:shadow-xl"
+            className="theme-surface rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8 md:mb-12 transition-shadow duration-200 ease-out hover:shadow-xl"
           >
             <ScrollReveal>
               <div>

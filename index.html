@@ -12,6 +12,18 @@
     <link rel="canonical" href="https://www.studiospace.community/" />
 
     <title>Studio Space Prishtina | Community Gathering Space</title>
+    <script>
+      (() => {
+        try {
+          const stored = window.localStorage.getItem('studio-space-theme');
+          const theme = stored === 'light' || stored === 'dark' ? stored : 'light';
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          document.documentElement.style.colorScheme = theme;
+        } catch {
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
 
     <meta
       name="description"

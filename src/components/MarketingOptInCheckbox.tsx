@@ -59,7 +59,7 @@ export function MarketingOptInCheckbox({ id, checked, onChange, variant = 'defau
             </svg>
           </span>
         </span>
-        <span className="text-xs text-gray-700 group-hover:text-gray-900 leading-snug">
+        <span className="text-xs text-gray-700 leading-snug">
           Subscribe for updates about Studio Space events, activities and news.
         </span>
       </label>

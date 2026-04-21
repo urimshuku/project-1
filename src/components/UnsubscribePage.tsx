@@ -46,8 +46,8 @@ export function UnsubscribePage({ onHome }: UnsubscribePageProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100 text-center">
+    <div className="min-h-screen theme-page flex flex-col items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full theme-surface rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100 text-center">
         {status === 'loading' && (
           <>
             <p className="text-gray-600 text-sm sm:text-base mb-2">Updating your preferences…</p>

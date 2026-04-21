@@ -115,7 +115,7 @@ export function Leaderboard({ categoryId, fallbackDonors }: LeaderboardProps) {
         {donorsToShow.map((donor, index) => (
           <div
             key={index}
-            className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm"
+            className="flex items-center justify-between theme-surface rounded-lg p-3 shadow-sm"
           >
             <div className="flex items-center gap-3">
               <span

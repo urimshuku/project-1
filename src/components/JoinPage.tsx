@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from './Header';
+import { BackButton } from './BackButton';
 import { Footer } from './Footer';
 import { ACTIVITIES } from '../lib/activitiesData';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
@@ -140,7 +141,7 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
   const activities: ActivitySection[] = ACTIVITIES;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col relative">
+    <div className="min-h-screen theme-page flex flex-col relative">
       <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
       <Header
@@ -153,23 +154,16 @@ export function JoinPage({ onBackToActivities, onLogoHome }: JoinPageProps) {
         <div className="max-w-7xl mx-auto w-full px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12 flex flex-col flex-1 min-h-0">
           <div className="flex-1 flex flex-col items-center justify-start min-h-0 overflow-y-auto w-full">
             <div className="max-w-lg w-full pb-4">
-              <button
-                type="button"
+              <BackButton
                 onClick={() => {
                   onBackToActivities();
                   window.scrollTo(0, 0);
                 }}
-                className="mb-4 sm:mb-6 ml-2 sm:ml-3 inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
-                aria-label="Back to Activities"
-              >
-                <img
-                  src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`}
-                  alt=""
-                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain block opacity-35"
-                />
-              </button>
+                className="mb-4 sm:mb-6 ml-2 sm:ml-3"
+                ariaLabel="Back to Activities"
+              />
 
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-md w-full border border-gray-200 p-4 sm:p-6 md:p-8">
+              <div className="theme-surface rounded-xl sm:rounded-2xl shadow-md w-full border border-gray-200 p-4 sm:p-6 md:p-8">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
               Join an Activity
             </h1>

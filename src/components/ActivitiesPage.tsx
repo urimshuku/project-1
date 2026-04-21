@@ -1,6 +1,7 @@
 import { ActivityCarousel } from './ActivityCarousel';
 import { ACTIVITIES } from '../lib/activitiesData';
 import { Header } from './Header';
+import { BackButton } from './BackButton';
 import { Footer } from './Footer';
 import { ScrollReveal } from './ScrollReveal';
 import { EntryDotsCanvas } from './EntryDotsCanvas';
@@ -15,7 +16,7 @@ const WORKSHOP_PREVIEW = `${base}/images/workshop/workshop-preview.png`;
 
 export function ActivitiesPage({ onBackToEntry, onJoinNow }: ActivitiesPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col relative">
+    <div className="min-h-screen theme-page flex flex-col relative">
       <EntryDotsCanvas mouse={null} opacityScale={0.75} speedScale={0.75} />
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
       <Header
@@ -27,21 +28,13 @@ export function ActivitiesPage({ onBackToEntry, onJoinNow }: ActivitiesPageProps
       />
       <div className="flex-1">
         <div className="max-w-7xl mx-auto px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:pt-10 md:pb-12">
-          <button
-            type="button"
+          <BackButton
             onClick={() => {
               onBackToEntry();
               window.scrollTo(0, 0);
             }}
-            className="mb-4 sm:mb-6 ml-2 sm:ml-3 inline-flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity"
-            aria-label="Back to Home"
-          >
-            <img
-              src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/arrow-back.svg`}
-              alt=""
-              className="w-6 h-6 sm:w-7 sm:h-7 object-contain block opacity-35"
-            />
-          </button>
+            className="mb-4 sm:mb-6 ml-2 sm:ml-3"
+          />
           <ScrollReveal className="mb-6 sm:mb-8 md:mb-12 text-center max-w-3xl mx-auto">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-8">
               Studio Space Activities

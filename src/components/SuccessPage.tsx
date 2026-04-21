@@ -7,10 +7,10 @@ interface SuccessPageProps {
 
 export function SuccessPage({ onBackHome }: SuccessPageProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen theme-page flex flex-col">
       <div className="flex-1 flex items-center justify-center p-3 sm:p-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 md:p-8 text-center">
+        <div className="theme-surface rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 md:p-8 text-center">
           <div className="mb-4 sm:mb-6">
             <div
               className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-bounce"

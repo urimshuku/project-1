@@ -87,8 +87,8 @@ export function EmailPreferencesPage({ onHome }: EmailPreferencesPageProps) {
 
   if (tokenError || loadStatus === 'error') {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100 text-center">
+      <div className="min-h-screen theme-page flex flex-col items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full theme-surface rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100 text-center">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Invalid or expired link</h1>
           <p className="text-gray-600 text-sm sm:text-base mb-6">
             Open this page from a link in a recent Studio Space email.
@@ -107,8 +107,8 @@ export function EmailPreferencesPage({ onHome }: EmailPreferencesPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100">
+    <div className="min-h-screen theme-page flex flex-col items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full theme-surface rounded-xl shadow-xl p-6 sm:p-8 border border-gray-100">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 text-center">Email preferences</h1>
         <p className="text-gray-600 text-sm sm:text-base mb-6 text-center">
           Choose what we can send you. No account needed — this link is your key.

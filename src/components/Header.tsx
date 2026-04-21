@@ -1,5 +1,6 @@
 import { Heart, Calendar } from 'lucide-react';
 import { scrollToTopEaseOut } from '../lib/scrollToTop';
+import { StudioLogo } from './StudioLogo';
 
 interface HeaderProps {
   selectedTab: string;
@@ -22,24 +23,8 @@ interface HeaderProps {
   onLogoClick?: () => void;
 }
 
-const LOGO_URLS: Record<NonNullable<HeaderProps['logoVariant']>, string> = {
-  donations: 'logo.svg?v=2',
-  activities: 'logo-activities.svg',
-  entry: 'logo-entry.svg',
-  venue: 'logo-venue.svg',
-};
-
-export function Header({ selectedTab, onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNow, logoVariant = 'donations', onLogoClick }: HeaderProps) {
+export function Header({ onTabChange, onGoHome, onDonateNow, onBookNow, onJoinNow, logoVariant = 'donations', onLogoClick }: HeaderProps) {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-  const logoUrl = `${base}/${LOGO_URLS[logoVariant]}`;
-  const logoAlt =
-    logoVariant === 'activities'
-      ? 'Studio Space Activities logo'
-      : logoVariant === 'entry'
-        ? 'Studio Space logo'
-        : logoVariant === 'venue'
-          ? 'Studio Space Venue logo'
-          : 'Studio Space Donations logo';
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,19 +38,18 @@ export function Header({ selectedTab, onTabChange, onGoHome, onDonateNow, onBook
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
+    <header className="theme-surface sticky top-0 z-50 border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
         {/* Left: logo */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <a
             href={base || '/'}
-            className="flex-shrink-0"
+            className="theme-heading flex-shrink-0"
             onClick={handleLogoClick}
             aria-label="Return to home"
           >
-            <img
-              src={logoUrl}
-              alt={logoAlt}
+            <StudioLogo
+              variant={logoVariant}
               className={`h-14 sm:h-16 md:h-24 w-auto ${logoVariant === 'entry' ? 'object-contain object-[center_30%]' : ''}`}
             />
           </a>

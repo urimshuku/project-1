@@ -34,7 +34,7 @@ export function JoinNowCard({ activities, onClose }: JoinNowCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl sm:rounded-2xl shadow-md max-w-lg w-full border border-gray-200"
+      className="theme-surface rounded-xl sm:rounded-2xl shadow-md max-w-lg w-full border border-gray-200"
       role="region"
       aria-labelledby="join-now-title"
     >

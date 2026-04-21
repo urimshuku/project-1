@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPin, Phone, Instagram, Loader2 } from 'lucide-react';
+import { StudioLogo } from './StudioLogo';
 
 /** Closed envelope, filled (Heroicons 24 solid “envelope” paths). */
 function NewsletterSubscribeIcon({ className }: { className?: string }) {
@@ -85,7 +86,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-white border-t border-gray-200 mt-6 sm:mt-8 md:mt-10">
+    <footer className="theme-surface border-t mt-6 sm:mt-8 md:mt-10">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-10 md:py-12">
         <div className="flex flex-row justify-between items-start gap-3 sm:gap-6 md:gap-8">
           {/* Logo + newsletter */}
@@ -95,10 +96,9 @@ export function Footer() {
               className="flex-shrink-0"
               aria-label="Studio Space home"
             >
-              <img
-                src={`${import.meta.env.BASE_URL}logo-entry.svg`}
-                alt="Studio Space logo"
-                className="h-12 sm:h-16 md:h-20 w-auto md:origin-top-left md:scale-[1.25]"
+              <StudioLogo
+                variant="entry"
+                className="theme-heading h-12 sm:h-16 md:h-20 w-auto md:origin-top-left md:scale-[1.25]"
               />
             </a>
 
@@ -126,14 +126,14 @@ export function Footer() {
                     }
                   }}
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
-                  className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs leading-snug text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-500 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm sm:leading-normal sm:focus:ring-2"
+                  className="theme-input min-w-0 flex-1 rounded-md border px-2 py-1.5 text-xs leading-snug placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)] focus:ring-offset-0 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm sm:leading-normal sm:focus:ring-2"
                 />
                 <button
                   type="submit"
                   disabled={!newsletterConfigured || newsletterStatus === 'loading'}
                   aria-label={newsletterStatus === 'loading' ? 'Subscribing…' : 'Subscribe to newsletter'}
                   aria-busy={newsletterStatus === 'loading'}
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-lg sm:p-2.5"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-md bg-gray-900 p-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-black sm:rounded-lg sm:p-2.5"
                 >
                   {newsletterStatus === 'loading' ? (
                     <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" aria-hidden />
