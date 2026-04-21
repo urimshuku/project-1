@@ -1,30 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ThemeContext, type Theme } from '../lib/theme';
 
-const THEME_STORAGE_KEY = 'studio-space-theme';
-
-function getStoredTheme(): Theme | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === 'light' || stored === 'dark' ? stored : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeTheme(theme: Theme) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // Ignore storage failures; the in-memory theme still updates.
-  }
-}
-
-function getInitialTheme(): Theme {
-  return getStoredTheme() ?? 'light';
-}
+const DISABLED_THEME: Theme = 'light';
 
 function applyTheme(theme: Theme) {
   if (typeof document === 'undefined') return;
@@ -33,23 +10,20 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [theme, setThemeState] = useState<Theme>(DISABLED_THEME);
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    applyTheme(DISABLED_THEME);
+  }, []);
 
-  const setTheme = useCallback((nextTheme: Theme) => {
-    setThemeState(nextTheme);
-    storeTheme(nextTheme);
+  const setTheme = useCallback((_nextTheme: Theme) => {
+    setThemeState(DISABLED_THEME);
+    applyTheme(DISABLED_THEME);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((current) => {
-      const nextTheme = current === 'dark' ? 'light' : 'dark';
-      storeTheme(nextTheme);
-      return nextTheme;
-    });
+    setThemeState(DISABLED_THEME);
+    applyTheme(DISABLED_THEME);
   }, []);
 
   const value = useMemo(
