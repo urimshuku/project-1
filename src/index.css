@@ -507,7 +507,7 @@ a:hover .footer-link-underline::after {
 .footer-emoji-roll__track {
   display: flex;
   flex-direction: column;
-  animation: footerEmojiRoll 72s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation: footerEmojiRoll 76s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   will-change: transform;
 }
 
@@ -524,25 +524,26 @@ a:hover .footer-link-underline::after {
 }
 
 @keyframes footerEmojiRoll {
-  0%, 3.47% { transform: translateY(0); }
-  5.56%, 9.03% { transform: translateY(calc(var(--footer-emoji-size) * -1)); }
-  11.11%, 14.58% { transform: translateY(calc(var(--footer-emoji-size) * -2)); }
-  16.67%, 20.14% { transform: translateY(calc(var(--footer-emoji-size) * -3)); }
-  22.22%, 25.69% { transform: translateY(calc(var(--footer-emoji-size) * -4)); }
-  27.78%, 31.25% { transform: translateY(calc(var(--footer-emoji-size) * -5)); }
-  33.33%, 36.81% { transform: translateY(calc(var(--footer-emoji-size) * -6)); }
-  38.89%, 42.36% { transform: translateY(calc(var(--footer-emoji-size) * -7)); }
-  44.44%, 47.92% { transform: translateY(calc(var(--footer-emoji-size) * -8)); }
-  50%, 53.47% { transform: translateY(calc(var(--footer-emoji-size) * -9)); }
-  55.56%, 59.03% { transform: translateY(calc(var(--footer-emoji-size) * -10)); }
-  61.11%, 64.58% { transform: translateY(calc(var(--footer-emoji-size) * -11)); }
-  66.67%, 70.14% { transform: translateY(calc(var(--footer-emoji-size) * -12)); }
-  72.22%, 75.69% { transform: translateY(calc(var(--footer-emoji-size) * -13)); }
-  77.78%, 81.25% { transform: translateY(calc(var(--footer-emoji-size) * -14)); }
-  83.33%, 86.81% { transform: translateY(calc(var(--footer-emoji-size) * -15)); }
-  88.89%, 92.36% { transform: translateY(calc(var(--footer-emoji-size) * -16)); }
-  94.44%, 97.92% { transform: translateY(calc(var(--footer-emoji-size) * -17)); }
-  100% { transform: translateY(calc(var(--footer-emoji-size) * -18)); }
+  0%, 3.29% { transform: translateY(0); }
+  5.26%, 8.55% { transform: translateY(calc(var(--footer-emoji-size) * -1)); }
+  10.53%, 13.82% { transform: translateY(calc(var(--footer-emoji-size) * -2)); }
+  15.79%, 19.08% { transform: translateY(calc(var(--footer-emoji-size) * -3)); }
+  21.05%, 24.34% { transform: translateY(calc(var(--footer-emoji-size) * -4)); }
+  26.32%, 29.61% { transform: translateY(calc(var(--footer-emoji-size) * -5)); }
+  31.58%, 34.87% { transform: translateY(calc(var(--footer-emoji-size) * -6)); }
+  36.84%, 40.13% { transform: translateY(calc(var(--footer-emoji-size) * -7)); }
+  42.11%, 45.39% { transform: translateY(calc(var(--footer-emoji-size) * -8)); }
+  47.37%, 50.66% { transform: translateY(calc(var(--footer-emoji-size) * -9)); }
+  52.63%, 55.92% { transform: translateY(calc(var(--footer-emoji-size) * -10)); }
+  57.89%, 61.18% { transform: translateY(calc(var(--footer-emoji-size) * -11)); }
+  63.16%, 66.45% { transform: translateY(calc(var(--footer-emoji-size) * -12)); }
+  68.42%, 71.71% { transform: translateY(calc(var(--footer-emoji-size) * -13)); }
+  73.68%, 76.97% { transform: translateY(calc(var(--footer-emoji-size) * -14)); }
+  78.95%, 82.24% { transform: translateY(calc(var(--footer-emoji-size) * -15)); }
+  84.21%, 87.5% { transform: translateY(calc(var(--footer-emoji-size) * -16)); }
+  89.47%, 92.76% { transform: translateY(calc(var(--footer-emoji-size) * -17)); }
+  94.74%, 98.03% { transform: translateY(calc(var(--footer-emoji-size) * -18)); }
+  100% { transform: translateY(calc(var(--footer-emoji-size) * -19)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
