@@ -23,6 +23,7 @@ const GOOGLE_MAPS_URL =
 const PHONE_RAW = '+38344173202';
 const PHONE_DISPLAY = '+383 44 173 202';
 const INSTAGRAM_URL = 'https://www.instagram.com/studio____space/';
+const FOOTER_ROLLING_EMOJIS = ['🫵🏼', '🎨', '🧘🏼‍♀️', '🪇', '🪩', '🎥', '🪔', '✨', '💃🏻', '🕺🏻', '🎊', '🎵', '💭', '📖', '🎤', '📝', '🎭', '🫖'];
 
 export function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -101,6 +102,19 @@ export function Footer() {
                 className="theme-heading h-12 sm:h-16 md:h-20 w-auto md:origin-top-left md:scale-[1.25]"
               />
             </a>
+            <p className="footer-made-with mt-1.5 text-xs text-gray-500 sm:mt-2 sm:text-sm" aria-label="A space for creative community">
+              <span>A space for</span>
+              <span className="footer-emoji-roll" aria-hidden="true">
+                <span className="footer-emoji-roll__track">
+                  {[...FOOTER_ROLLING_EMOJIS, FOOTER_ROLLING_EMOJIS[0]].map((emoji, index) => (
+                    <span key={`${emoji}-${index}`} className="footer-emoji-roll__item">
+                      {emoji}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <span>.</span>
+            </p>
 
             <div className="mt-2 sm:mt-3 md:mt-7 w-full">
               <h2 className="text-xs font-normal text-gray-500 mb-1">Join our newsletter</h2>
@@ -192,7 +206,7 @@ export function Footer() {
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
 
-            <p className="mt-3 sm:mt-4 text-right text-[9px] sm:text-[11px] text-gray-500 leading-relaxed">
+            <p className="mt-3 text-right text-[9px] sm:mt-4 sm:text-[11px] text-gray-500 leading-relaxed">
               © 2026 Studio Space. All rights reserved.
               <br />
               Powered by United Human Beings (UHB)

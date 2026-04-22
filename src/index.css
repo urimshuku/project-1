@@ -484,6 +484,73 @@ a:hover .footer-link-underline::after {
   transform: scaleX(1);
 }
 
+.footer-made-with {
+  --footer-emoji-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.32rem;
+  line-height: var(--footer-emoji-size);
+  white-space: nowrap;
+}
+
+.footer-emoji-roll {
+  display: inline-grid;
+  width: var(--footer-emoji-size);
+  height: var(--footer-emoji-size);
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+  flex: 0 0 var(--footer-emoji-size);
+}
+
+.footer-emoji-roll__track {
+  display: flex;
+  flex-direction: column;
+  animation: footerEmojiRoll 72s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform;
+}
+
+.footer-emoji-roll__item {
+  display: grid;
+  width: var(--footer-emoji-size);
+  height: var(--footer-emoji-size);
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+@keyframes footerEmojiRoll {
+  0%, 3.47% { transform: translateY(0); }
+  5.56%, 9.03% { transform: translateY(calc(var(--footer-emoji-size) * -1)); }
+  11.11%, 14.58% { transform: translateY(calc(var(--footer-emoji-size) * -2)); }
+  16.67%, 20.14% { transform: translateY(calc(var(--footer-emoji-size) * -3)); }
+  22.22%, 25.69% { transform: translateY(calc(var(--footer-emoji-size) * -4)); }
+  27.78%, 31.25% { transform: translateY(calc(var(--footer-emoji-size) * -5)); }
+  33.33%, 36.81% { transform: translateY(calc(var(--footer-emoji-size) * -6)); }
+  38.89%, 42.36% { transform: translateY(calc(var(--footer-emoji-size) * -7)); }
+  44.44%, 47.92% { transform: translateY(calc(var(--footer-emoji-size) * -8)); }
+  50%, 53.47% { transform: translateY(calc(var(--footer-emoji-size) * -9)); }
+  55.56%, 59.03% { transform: translateY(calc(var(--footer-emoji-size) * -10)); }
+  61.11%, 64.58% { transform: translateY(calc(var(--footer-emoji-size) * -11)); }
+  66.67%, 70.14% { transform: translateY(calc(var(--footer-emoji-size) * -12)); }
+  72.22%, 75.69% { transform: translateY(calc(var(--footer-emoji-size) * -13)); }
+  77.78%, 81.25% { transform: translateY(calc(var(--footer-emoji-size) * -14)); }
+  83.33%, 86.81% { transform: translateY(calc(var(--footer-emoji-size) * -15)); }
+  88.89%, 92.36% { transform: translateY(calc(var(--footer-emoji-size) * -16)); }
+  94.44%, 97.92% { transform: translateY(calc(var(--footer-emoji-size) * -17)); }
+  100% { transform: translateY(calc(var(--footer-emoji-size) * -18)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-emoji-roll__track {
+    animation: none;
+  }
+}
+
 /* Footer heart: slide in from bottom at natural pace */
 @keyframes heartSlideUp {
   from {
@@ -587,6 +654,7 @@ a:hover .footer-link-underline::after {
   letter-spacing: 0.04em;
   color: #6b7280;
 }
+
 @media (min-width: 640px) {
   .carousel-caption--subtle {
     font-size: 12px;
