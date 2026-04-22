@@ -79,6 +79,11 @@ export function VenuePage({ onBackToEntry, onBookNow }: VenuePageProps) {
               The Story
             </h2>
             <div className="max-w-3xl space-y-4 sm:space-y-5 text-base sm:text-lg text-gray-600 leading-relaxed">
+              <p>Studio Space came into being very simply.</p>
+              <p>
+                There was a wish to sit together. To share a room without needing a reason. To have a place where
+                people can come as they are, and let things unfold naturally.
+              </p>
               <p>
                 Over time, it became a space where many small things happen. Films are watched, books are discussed,
                 conversations begin, music is shared, silence is held. None of these define it, yet all of them

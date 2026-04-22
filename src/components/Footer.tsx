@@ -206,7 +206,7 @@ export function Footer() {
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
 
-            <p className="mt-8 text-right text-[9px] sm:mt-4 sm:text-[11px] text-gray-500 leading-relaxed">
+            <p className="mt-8 text-right text-[9px] sm:mt-8 sm:text-[11px] text-gray-500 leading-relaxed">
               © 2026 Studio Space. All rights reserved.
               <br />
               Powered by United Human Beings (UHB)
