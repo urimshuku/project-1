@@ -116,7 +116,7 @@ export function Footer() {
               <span>.</span>
             </p>
 
-            <div className="mt-2 sm:mt-3 md:mt-7 w-full">
+            <div className="mt-4 sm:mt-3 md:mt-7 w-full">
               <h2 className="text-xs font-normal text-gray-500 mb-1">Join our newsletter</h2>
               <form
                 onSubmit={handleNewsletterSubmit}
