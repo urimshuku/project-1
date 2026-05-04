@@ -175,6 +175,20 @@ export function Footer() {
                   {newsletterMessage}
                 </p>
               )}
+              <nav
+                className="mt-4 hidden flex-wrap gap-x-4 gap-y-1 text-[11px] leading-snug text-gray-500 md:flex"
+                aria-label="Legal"
+              >
+                {LEGAL_LINKS.map((link) => (
+                  <a
+                    key={link.href}
+                    href={buildAppPath(link.href)}
+                    className="footer-link-underline transition-colors hover:text-gray-900"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
             </div>
           </div>
 
@@ -217,19 +231,22 @@ export function Footer() {
               <br />
               Powered by United Human Beings (UHB)
             </p>
-            <nav className="flex max-w-[11rem] flex-wrap justify-end gap-x-2 gap-y-1 text-right text-[9px] leading-snug text-gray-500 sm:max-w-none sm:gap-x-3 sm:text-[11px]" aria-label="Legal">
-              {LEGAL_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={buildAppPath(link.href)}
-                  className="footer-link-underline transition-colors hover:text-gray-900"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
           </div>
         </div>
+        <nav
+          className="mx-auto mt-5 flex max-w-xs flex-wrap justify-center gap-x-3 gap-y-1 text-center text-[9px] leading-snug text-gray-500 sm:text-[11px] md:hidden"
+          aria-label="Legal"
+        >
+          {LEGAL_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={buildAppPath(link.href)}
+              className="footer-link-underline transition-colors hover:text-gray-900"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
       </div>
     </footer>
   );
