@@ -18,7 +18,9 @@ import { WordsOfSupport } from './components/WordsOfSupport';
 import { ImageCarousel } from './components/ImageCarousel';
 import { ScrollReveal } from './components/ScrollReveal';
 import { Footer } from './components/Footer';
+import { LegalPage } from './components/LegalPage';
 import { supabase } from './lib/supabase';
+import { buildAppPath, getBaseFull, pathRelativeToBase } from './lib/routes';
 import type { Category } from './lib/types';
 
 type Page =
@@ -32,21 +34,10 @@ type Page =
   | 'venue'
   | 'join'
   | 'unsubscribe'
-  | 'email-preferences';
-
-/** First path segments that are real app routes, not GitHub Pages repo bases (e.g. /studio-space). */
-const TOP_LEVEL_APP_SEGMENTS = new Set([
-  'venue',
-  'activities',
-  'donate',
-  'donations',
-  'book',
-  'join',
-  'success',
-  'cancel',
-  'unsubscribe',
-  'email-preferences',
-]);
+  | 'email-preferences'
+  | 'privacy-policy'
+  | 'cookie-policy'
+  | 'terms-of-service';
 
 // Default categories when Supabase returns none (used on first load or if DB is empty)
 const DEFAULT_CATEGORIES: Category[] = [
@@ -118,36 +109,6 @@ const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
-/** Compute the effective base path at runtime (handles GitHub Pages subfolder deployments). */
-function getBaseFull(): string {
-  const rawBase = import.meta.env.BASE_URL || '/';
-  // Strip leading and trailing slashes so we don't accidentally double-prefix.
-  const cleaned = rawBase.replace(/^\/+|\/+$/g, '');
-  let baseFull = cleaned ? `/${cleaned}` : '/';
-
-  // If Vite base is root but app is served from a subfolder (e.g. GitHub Pages /repo-name),
-  // derive base from the first path segment.
-  if (baseFull === '/' && typeof window !== 'undefined') {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    if (parts.length > 0 && !TOP_LEVEL_APP_SEGMENTS.has(parts[0])) {
-      baseFull = `/${parts[0]}`;
-    }
-  }
-
-  return baseFull;
-}
-
-/** Path after deployment base (e.g. /venue on custom domain, /studio-space/venue → /venue on GitHub Pages). */
-function pathRelativeToBase(pathname: string, baseFull: string): string {
-  if (baseFull === '/') return pathname;
-  if (pathname === baseFull || pathname === baseFull + '/') return '/';
-  if (pathname.startsWith(baseFull + '/')) {
-    const rel = pathname.slice(baseFull.length).replace(/\/$/, '') || '/';
-    return rel.startsWith('/') ? rel : `/${rel}`;
-  }
-  return pathname;
-}
-
 function getPageFromPathname(): Page {
   if (typeof window === 'undefined') return 'entry';
   const params = new URLSearchParams(window.location.search);
@@ -167,6 +128,9 @@ function getPageFromPathname(): Page {
   if (segments[0] === 'email-preferences' || pathRel.includes('/email-preferences')) {
     return 'email-preferences';
   }
+  if (segments[0] === 'privacy-policy') return 'privacy-policy';
+  if (segments[0] === 'cookie-policy') return 'cookie-policy';
+  if (segments[0] === 'terms-of-service') return 'terms-of-service';
 
   if (
     (segments[0] === 'venue' && segments[1] === 'book') ||
@@ -200,11 +164,17 @@ function getInitialPage(): Page {
   return getPageFromPathname();
 }
 
-/** Unsubscribe / preferences are static; don’t block on category fetch. */
-function skipInitialLoadingForEmailLinks(): boolean {
+/** Static pages don’t need the donation-category fetch before rendering. */
+function skipInitialLoadingForStaticPages(): boolean {
   if (typeof window === 'undefined') return false;
   const p = getPageFromPathname();
-  return p === 'unsubscribe' || p === 'email-preferences';
+  return (
+    p === 'unsubscribe' ||
+    p === 'email-preferences' ||
+    p === 'privacy-policy' ||
+    p === 'cookie-policy' ||
+    p === 'terms-of-service'
+  );
 }
 
 function App() {
@@ -212,7 +182,7 @@ function App() {
   const [selectedTab, setSelectedTab] = useState('General Donations');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState(() => !skipInitialLoadingForEmailLinks());
+  const [loading, setLoading] = useState(() => !skipInitialLoadingForStaticPages());
 
   useEffect(() => {
     if (!supabase) {
@@ -257,13 +227,12 @@ function App() {
   }, []);
 
   const baseFull = getBaseFull();
-  const sep = baseFull === '/' ? '' : '/';
-  const venuePath = `${baseFull}${sep}venue`;
+  const venuePath = buildAppPath('/venue');
   const bookPath = `${venuePath}/book`;
-  const activitiesPath = `${baseFull}${sep}activities`;
+  const activitiesPath = buildAppPath('/activities');
   const joinPath = `${activitiesPath}/join`;
   /** Main “Support Our Studio Space Renovations” listing. */
-  const donationsPath = `${baseFull}${sep}donations`;
+  const donationsPath = buildAppPath('/donations');
   /** Quick general-donation flow (header “Donate now”). */
   const donatePath = `${donationsPath}/donate`;
 
@@ -397,8 +366,7 @@ function App() {
   };
 
   const handlePaymentSuccess = () => {
-    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-    window.history.pushState({}, '', `${base}/success?paysera=1`);
+    window.history.pushState({}, '', buildAppPath('/success?paysera=1'));
     setCurrentPage('success');
   };
 
@@ -484,6 +452,14 @@ function App() {
 
   if (currentPage === 'email-preferences') {
     return <EmailPreferencesPage onHome={handleBackToEntry} />;
+  }
+
+  if (
+    currentPage === 'privacy-policy' ||
+    currentPage === 'cookie-policy' ||
+    currentPage === 'terms-of-service'
+  ) {
+    return <LegalPage page={currentPage} onHome={handleBackToEntry} />;
   }
 
   if (currentPage === 'activities') {

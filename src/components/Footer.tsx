@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MapPin, Phone, Instagram, Loader2 } from 'lucide-react';
 import { StudioLogo } from './StudioLogo';
+import { buildAppPath } from '../lib/routes';
 
 /** Closed envelope, filled (Heroicons 24 solid “envelope” paths). */
 function NewsletterSubscribeIcon({ className }: { className?: string }) {
@@ -24,6 +25,11 @@ const PHONE_RAW = '+38344173202';
 const PHONE_DISPLAY = '+383 44 173 202';
 const INSTAGRAM_URL = 'https://www.instagram.com/studio____space/';
 const FOOTER_ROLLING_EMOJIS = ['🫵🏼', '🎨', '🧘🏼‍♀️', '🪇', '🪩', '🎥', '🪔', '✨', '💃🏻', '🕺🏻', '🎊', '🎵', '💭', '📖', '🎤', '📝', '🎭', '🫖', '🌍'];
+const LEGAL_LINKS = [
+  { href: '/cookie-policy', label: 'Cookie Policy' },
+  { href: '/privacy-policy', label: 'Privacy Policy' },
+  { href: '/terms-of-service', label: 'Terms of Service' },
+];
 
 export function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -93,7 +99,7 @@ export function Footer() {
           {/* Logo + newsletter */}
           <div className="flex flex-col items-start flex-shrink-0 min-w-0 max-w-full sm:max-w-sm">
             <a
-              href={import.meta.env.BASE_URL || '/'}
+              href={buildAppPath('/')}
               className="flex-shrink-0"
               aria-label="Studio Space home"
             >
@@ -211,6 +217,17 @@ export function Footer() {
               <br />
               Powered by United Human Beings (UHB)
             </p>
+            <nav className="flex max-w-[11rem] flex-wrap justify-end gap-x-2 gap-y-1 text-right text-[9px] leading-snug text-gray-500 sm:max-w-none sm:gap-x-3 sm:text-[11px]" aria-label="Legal">
+              {LEGAL_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={buildAppPath(link.href)}
+                  className="footer-link-underline transition-colors hover:text-gray-900"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
           </div>
         </div>
       </div>
