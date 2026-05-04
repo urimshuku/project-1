@@ -175,20 +175,6 @@ export function Footer() {
                   {newsletterMessage}
                 </p>
               )}
-              <nav
-                className="mt-4 hidden flex-wrap gap-x-4 gap-y-1 text-[11px] leading-snug text-gray-500 md:flex"
-                aria-label="Legal"
-              >
-                {LEGAL_LINKS.map((link) => (
-                  <a
-                    key={link.href}
-                    href={buildAppPath(link.href)}
-                    className="footer-link-underline transition-colors hover:text-gray-900"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
             </div>
           </div>
 
@@ -226,11 +212,25 @@ export function Footer() {
               <Instagram className="w-3.5 h-3.5 sm:w-5 sm:h-5 flex-shrink-0 text-black" aria-hidden />
             </a>
 
-            <p className="mt-8 text-right text-[9px] sm:mt-8 sm:text-[11px] text-gray-500 leading-relaxed">
+            <p className="mt-8 text-right text-[9px] text-gray-500 leading-relaxed sm:mt-8 sm:text-[11px] md:mt-3">
               © 2026 Studio Space. All rights reserved.
               <br />
               Powered by United Human Beings (UHB)
             </p>
+            <nav
+              className="mt-1 hidden max-w-sm flex-wrap justify-end gap-x-4 gap-y-1 text-right text-[11px] leading-snug text-gray-500 md:flex"
+              aria-label="Legal"
+            >
+              {LEGAL_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={buildAppPath(link.href)}
+                  className="footer-link-underline transition-colors hover:text-gray-900"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
           </div>
         </div>
         <nav
