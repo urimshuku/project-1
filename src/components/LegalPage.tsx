@@ -8,6 +8,9 @@ export type LegalPageKind = 'privacy-policy' | 'cookie-policy' | 'terms-of-servi
 const CONTACT_EMAIL = 'bookings@studiospace.community';
 const COOKIE_PREFS_KEY = 'studio-space-cookie-preferences';
 
+/** Set true when a privacy-friendly analytics provider is wired and the opt-in row should appear. */
+const ANALYTICS_PREFERENCE_AVAILABLE = false;
+
 interface LegalPageProps {
   page: LegalPageKind;
   onHome: () => void;
@@ -122,19 +125,19 @@ const cookiePolicy: LegalDocument = {
     {
       heading: 'Current cookie use',
       paragraphs: [
-        'The Studio Space website does not intentionally set analytics or advertising cookies right now. The site uses the information you submit through forms and stores cookie preferences locally in your browser if you choose them on this page.',
+        'The Studio Space website does not intentionally set analytics or advertising cookies right now. The site uses the information you submit through forms.',
       ],
     },
     {
       heading: 'Necessary technologies',
       paragraphs: [
-        'Some technologies are necessary for the site to work, such as loading pages, submitting forms, protecting requests, remembering your cookie preference choice, and connecting to services like Supabase. These are treated as necessary and cannot be turned off from this page.',
+        'Some technologies are necessary for the site to work, such as loading pages, submitting forms, protecting requests, and connecting to services like Supabase. These are treated as necessary and cannot be turned off from this page.',
       ],
     },
     {
       heading: 'Future analytics',
       paragraphs: [
-        'Studio Space may add privacy-friendly analytics later to understand general site usage. Analytics are off by default in the preferences below, and the site should not initialize analytics unless analytics preferences are enabled and an analytics provider has been added.',
+        'Studio Space may add privacy-friendly analytics later to understand general site usage. Until then, analytics cookies are not used on this site. If analytics are added, this policy will be updated and a preference control will be available so you can choose whether to allow that category.',
       ],
     },
     {
@@ -146,7 +149,7 @@ const cookiePolicy: LegalDocument = {
     {
       heading: 'Managing cookies',
       paragraphs: [
-        'You can use the preference control below for Studio Space choices. You can also control cookies in your browser settings.',
+        'The overview below summarizes how Studio Space groups cookies today. Where optional analytics are not yet available, categories are inactive until stated otherwise. You can also use your browser or device settings to block, delete, or limit cookies and site-specific data.',
       ],
     },
     {
@@ -254,19 +257,62 @@ function loadCookiePreferences(): CookiePreferences {
   }
 }
 
-function CookiePreferencesPanel() {
+function CookiePreferencesPanelStatic() {
+  return (
+    <section
+      id="cookie-preferences"
+      className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
+      aria-labelledby="cookie-preferences-heading"
+    >
+      <h2 id="cookie-preferences-heading" className="text-lg font-semibold text-gray-900">
+        Cookie preferences
+      </h2>
+      <div className="mt-4 space-y-4">
+        <div className="flex items-start justify-between gap-4 rounded-md border border-gray-100 bg-gray-50 p-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Necessary</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Required for basic site operation, security, and connecting to core services.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-semibold text-white">
+            <Check className="h-3 w-3" aria-hidden />
+            Always on
+          </span>
+        </div>
+
+        <div
+          className="flex items-start justify-between gap-4 rounded-md border border-dashed border-gray-200 bg-gray-50/80 p-3 text-gray-500"
+          aria-disabled
+        >
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500">Privacy-friendly analytics</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Inactive for now. If Studio Space adds privacy-friendly analytics later, you will be able to opt in here.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 rounded-md bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600">
+            Inactive
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CookiePreferencesPanelInteractive() {
   const [preferences, setPreferences] = useState<CookiePreferences>(loadCookiePreferences);
   const [saved, setSaved] = useState(false);
 
-  const handleAnalyticsChange = (analytics: boolean) => {
-    setPreferences({ necessary: true, analytics });
-    setSaved(false);
-  };
-
   const handleSave = () => {
+    const persisted: CookiePreferences = {
+      necessary: true,
+      analytics: preferences.analytics,
+    };
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(COOKIE_PREFS_KEY, JSON.stringify(preferences));
+      window.localStorage.setItem(COOKIE_PREFS_KEY, JSON.stringify(persisted));
     }
+    setPreferences(persisted);
     setSaved(true);
   };
 
@@ -297,13 +343,16 @@ function CookiePreferencesPanel() {
           <span>
             <span className="block text-sm font-semibold text-gray-900">Privacy-friendly analytics</span>
             <span className="mt-1 block text-sm text-gray-600">
-              Off unless Studio Space adds analytics and you allow this category.
+              Allow privacy-friendly analytics to help us understand general site usage.
             </span>
           </span>
           <input
             type="checkbox"
             checked={preferences.analytics}
-            onChange={(e) => handleAnalyticsChange(e.target.checked)}
+            onChange={(e) => {
+              setPreferences({ necessary: true, analytics: e.target.checked });
+              setSaved(false);
+            }}
             className="mt-1 h-4 w-4 rounded border-gray-300 text-[#c95b2d] focus:ring-[#c95b2d]"
           />
         </label>
@@ -325,6 +374,10 @@ function CookiePreferencesPanel() {
       </div>
     </section>
   );
+}
+
+function CookiePreferencesPanel() {
+  return ANALYTICS_PREFERENCE_AVAILABLE ? <CookiePreferencesPanelInteractive /> : <CookiePreferencesPanelStatic />;
 }
 
 export function LegalPage({ page, onHome }: LegalPageProps) {
