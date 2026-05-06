@@ -149,7 +149,7 @@ const cookiePolicy: LegalDocument = {
     {
       heading: 'Managing cookies',
       paragraphs: [
-        'The overview below summarizes how Studio Space groups cookies today. Where optional analytics are not yet available, categories are inactive until stated otherwise. You can also use your browser or device settings to block, delete, or limit cookies and site-specific data.',
+        'The summary below lists necessary cookies and similar technologies treated as essential for core site operations. You can also use your browser or device settings to block, delete, or limit cookies and site-specific data.',
       ],
     },
     {
@@ -199,7 +199,7 @@ const termsOfService: LegalDocument = {
     {
       heading: 'Donations and payments',
       paragraphs: [
-        'Payments are processed through Paysera. Studio Space does not store card or bank details.',
+        'Payments are processed through Paysera Kosova SH.P.K. ("Paysera"). Studio Space does not store card or bank details.',
         'Donations made through the United Human Beings Foundation (UHB) are voluntary and generally non-refundable, except where there is an obvious error such as a duplicate payment, unauthorized transaction, or similar issue.',
         `If you believe a donation was made in error, contact ${CONTACT_EMAIL} with enough information for us to identify the donation.`,
       ],
@@ -278,21 +278,6 @@ function CookiePreferencesPanelStatic() {
           <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-gray-900 px-2 py-1 text-xs font-semibold text-white">
             <Check className="h-3 w-3" aria-hidden />
             Always on
-          </span>
-        </div>
-
-        <div
-          className="flex items-start justify-between gap-4 rounded-md border border-dashed border-gray-200 bg-gray-50/80 p-3 text-gray-500"
-          aria-disabled
-        >
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Privacy-friendly analytics</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Inactive for now. If Studio Space adds privacy-friendly analytics later, you will be able to opt in here.
-            </p>
-          </div>
-          <span className="inline-flex shrink-0 rounded-md bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600">
-            Inactive
           </span>
         </div>
       </div>
