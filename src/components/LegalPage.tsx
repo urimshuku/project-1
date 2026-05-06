@@ -90,7 +90,7 @@ const privacyPolicy: LegalDocument = {
     {
       heading: 'Service providers',
       paragraphs: [
-        'We use trusted service providers to run the site and related services. These include Supabase for database and Edge Functions, Resend for email sending and contact sync, Paysera for payment processing, and GitHub Pages for hosting. These providers process information only as needed to provide their services to us.',
+        'We use trusted service providers to run the site and related services. These include SUPABASE PTE. LTD. ("Supabase") for database and Edge Functions, RESEND C.I.C. ("Resend") for email sending and contact sync, Paysera Kosova SH.P.K. ("Paysera") for payment processing, and GitHub, Inc. ("GitHub") for hosting. These providers process information only as needed to provide their services to us.',
         'Payment-related information may be processed for donations and for paid activities when they are offered. Card and bank details are handled by the payment provider. Studio Space does not store card or bank details.',
       ],
     },
