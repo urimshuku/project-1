@@ -108,7 +108,10 @@ export function Footer() {
                 className="theme-heading h-12 sm:h-16 md:h-20 w-auto md:origin-top-left md:scale-[1.25]"
               />
             </a>
-            <p className="footer-made-with -mt-2 text-xs text-gray-500 sm:mt-2 sm:text-sm" aria-label="A space for creative community">
+            <p
+              className="footer-made-with pointer-events-none -mt-2 text-xs text-gray-500 sm:mt-2 sm:text-sm"
+              aria-label="A space for creative community"
+            >
               <span>A space for</span>
               <span className="footer-emoji-roll" aria-hidden="true">
                 <span className="footer-emoji-roll__track">
