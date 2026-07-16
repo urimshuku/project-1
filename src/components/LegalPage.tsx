@@ -41,12 +41,12 @@ const defaultCookiePreferences: CookiePreferences = {
 const privacyPolicy: LegalDocument = {
   title: 'Privacy Policy',
   intro:
-    'This Privacy Policy explains how Studio Space, operating under the United Human Beings Foundation (UHB), handles personal information when you visit the site, donate, book the venue, join activities, or subscribe to updates.',
+    'This Privacy Policy explains how Studio Space, operating under the United Human Beings Foundation (UHB), handles personal information when you visit the site, donate, purchase physical goods or paid activities when they are offered, book the venue, join activities, or subscribe to updates.',
   sections: [
     {
       heading: 'Who we are',
       paragraphs: [
-        'Studio Space is a community space in Prishtina operating under the United Human Beings Foundation (UHB), dedicated to educational activities, personal development, and social engagement.',
+        'Studio Space is a community space in Prishtina operating under the United Human Beings Foundation (UHB), dedicated to educational activities, personal development, and social engagement. Through the website, Studio Space may also offer physical goods for sale alongside community activities and donations.',
         `For privacy requests, contact us at ${CONTACT_EMAIL}.`,
       ],
     },
@@ -55,6 +55,7 @@ const privacyPolicy: LegalDocument = {
       bullets: [
         'Newsletter and email preferences: email address, marketing opt-in status, unsubscribe status, preference settings, and unsubscribe tokens.',
         'Donations: donation amount, donation category, donor name, email address, anonymous/public display choice, optional words of support, payment reference, and timestamps.',
+        'Orders for physical goods: purchaser name, email address, phone number if provided, shipping or delivery address, ordered items, order amount, payment reference, fulfillment status, and timestamps.',
         'Venue bookings: selected dates and times, full name, phone number, email address, activity type, group size, notes, approval status, and timestamps.',
         'Activity registrations and join requests: full name, email address, phone number if provided, selected activity or activities, attendance notes, payment status where relevant, future activity notes, and timestamps.',
         'Email delivery and engagement records: email type, opaque tracking id, sent-log timestamp, and whether an email was opened or a link was clicked.',
@@ -65,6 +66,7 @@ const privacyPolicy: LegalDocument = {
       heading: 'How we use information',
       bullets: [
         'To process donations and keep donation records.',
+        'To process orders for physical goods, arrange delivery or collection, and keep order records.',
         'To process registrations and payments for paid activities when they are offered.',
         'To show donor names and words of support publicly unless the donor chooses to appear anonymous.',
         'To respond to venue booking requests and manage booking availability.',
@@ -84,20 +86,20 @@ const privacyPolicy: LegalDocument = {
     {
       heading: 'Who can access information',
       paragraphs: [
-        'Access is limited to the core Studio Space/UHB admin team that needs the information to handle donations, paid activity registrations, bookings, activities, email preferences, and related operations.',
+        'Access is limited to the core Studio Space/UHB admin team that needs the information to handle donations, physical goods orders, paid activity registrations, bookings, activities, email preferences, and related operations.',
       ],
     },
     {
       heading: 'Service providers',
       paragraphs: [
         'We use trusted service providers to run the site and related services. These include SUPABASE PTE. LTD. ("Supabase") for database and Edge Functions, RESEND C.I.C. ("Resend") for email sending and contact sync, Paysera Kosova SH.P.K. ("Paysera") for payment processing, and GitHub, Inc. ("GitHub") for hosting. These providers process information only as needed to provide their services to us.',
-        'Payment-related information may be processed for donations and for paid activities when they are offered. Card and bank details are handled by the payment provider. Studio Space does not store card or bank details.',
+        'Payment-related information may be processed for donations, for physical goods purchases, and for paid activities when they are offered. Card and bank details are handled by the payment provider. Studio Space does not store card or bank details.',
       ],
     },
     {
       heading: 'Retention',
       paragraphs: [
-        'We keep personal information only for as long as needed for the purposes above, including donation records, paid activity records, booking and activity administration, email preferences, security, and legal or accounting duties. When information is no longer needed, we delete it or keep it only in a limited archived form where legally necessary.',
+        'We keep personal information only for as long as needed for the purposes above, including donation records, physical goods order and delivery records, paid activity records, booking and activity administration, email preferences, security, and legal or accounting duties. When information is no longer needed, we delete it or keep it only in a limited archived form where legally necessary.',
       ],
     },
     {
@@ -131,7 +133,7 @@ const cookiePolicy: LegalDocument = {
     {
       heading: 'Necessary technologies',
       paragraphs: [
-        'Some technologies are necessary for the site to work, such as loading pages, submitting forms, protecting requests, and connecting to services like Supabase. These are treated as necessary and cannot be turned off from this page.',
+        'Some technologies are necessary for the site to work, such as loading pages, submitting forms for donations, physical goods orders, bookings, or activities, protecting requests, and connecting to services like Supabase. These are treated as necessary and cannot be turned off from this page.',
       ],
     },
     {
@@ -143,13 +145,13 @@ const cookiePolicy: LegalDocument = {
     {
       heading: 'External services',
       paragraphs: [
-        'When you leave this site for an external service, such as Google Maps, Instagram, or Paysera, those services may use their own cookies or similar technologies under their own policies.',
+        'When you leave this site for an external service, such as Google Maps, Instagram, or Paysera (including when paying for donations, physical goods, or paid activities), those services may use their own cookies or similar technologies under their own policies.',
       ],
     },
     {
       heading: 'Managing cookies',
       paragraphs: [
-        'The summary below lists necessary cookies and similar technologies treated as essential for core site operations. You can also use your browser or device settings to block, delete, or limit cookies and site-specific data.',
+        'The summary below lists necessary cookies and similar technologies treated as essential for core site operations, including checkout and payment-related flows when physical goods or other paid offerings are available. You can also use your browser or device settings to block, delete, or limit cookies and site-specific data.',
       ],
     },
     {
@@ -162,13 +164,13 @@ const cookiePolicy: LegalDocument = {
 const termsOfService: LegalDocument = {
   title: 'Terms of Service',
   intro:
-    'These Terms of Service describe the basic rules for using the Studio Space website, donating, paying for activities when they are offered, submitting booking requests, and joining activities.',
+    'These Terms of Service describe the basic rules for using the Studio Space website, donating, purchasing physical goods when they are offered, paying for activities when they are offered, submitting booking requests, and joining activities.',
   sections: [
     {
       heading: 'About Studio Space',
       paragraphs: [
         'Studio Space is a community space operating under the United Human Beings Foundation (UHB), dedicated to educational activities, personal development, and social engagement.',
-        'Visitors can find information and register for events such as workshops, discussions, film screenings, well-being activities, and other community-oriented programs.',
+        'Visitors can find information and register for events such as workshops, discussions, film screenings, well-being activities, and other community-oriented programs. Studio Space may also offer physical goods for sale through the website.',
       ],
     },
     {
@@ -191,9 +193,10 @@ const termsOfService: LegalDocument = {
       ],
     },
     {
-      heading: 'No physical delivery',
+      heading: 'Physical goods and delivery',
       paragraphs: [
-        'Studio Space does not sell physical goods through the website, so no physical delivery conditions apply. Services are offered as participation in activities, which may take place physically at Studio Space or, in some cases, online. After payment, participants receive confirmation and relevant attendance details.',
+        'Studio Space may sell physical goods through the website. When you purchase physical goods, you may be asked to provide delivery or collection details so the order can be fulfilled.',
+        'Delivery timing, collection options, shipping costs if any, and other fulfillment details will be communicated at checkout or afterward by email. Services such as participation in activities may also be offered and may take place physically at Studio Space or, in some cases, online. After payment for an activity, participants receive confirmation and relevant attendance details.',
       ],
     },
     {
@@ -201,14 +204,15 @@ const termsOfService: LegalDocument = {
       paragraphs: [
         'Payments are processed through Paysera Kosova SH.P.K. ("Paysera"). Studio Space does not store card or bank details.',
         'Donations made through the United Human Beings Foundation (UHB) are voluntary and generally non-refundable, except where there is an obvious error such as a duplicate payment, unauthorized transaction, or similar issue.',
-        `If you believe a donation was made in error, contact ${CONTACT_EMAIL} with enough information for us to identify the donation.`,
+        `If you believe a donation or purchase was made in error, contact ${CONTACT_EMAIL} with enough information for us to identify the payment.`,
       ],
     },
     {
-      heading: 'Paid activity refunds',
+      heading: 'Paid activity and goods refunds',
       paragraphs: [
         'Payments for participation in paid activities are generally non-refundable. If Studio Space or the organizer cancels an activity, participants are entitled to a full refund or the option to transfer their payment to another activity.',
         'If a participant cannot attend, refund or transfer requests may be reviewed case by case.',
+        'For physical goods, refund or replacement requests for damaged, missing, or incorrect items may be reviewed case by case. Contact Studio Space promptly with your order details so we can help.',
       ],
     },
     {
@@ -220,7 +224,7 @@ const termsOfService: LegalDocument = {
     {
       heading: 'Respectful use of the space',
       paragraphs: [
-        'Visitors, participants, donors, and booking requesters are expected to act respectfully and safely, follow lawful use, and avoid harming people, property, or the space. Studio Space may refuse, cancel, or limit access where needed to protect the community or the space.',
+        'Visitors, participants, donors, purchasers, and booking requesters are expected to act respectfully and safely, follow lawful use, and avoid harming people, property, or the space. Studio Space may refuse, cancel, or limit access where needed to protect the community or the space.',
       ],
     },
     {
