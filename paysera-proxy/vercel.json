@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/paysera-callback", "destination": "/api/paysera-callback" }
+  ]
+}

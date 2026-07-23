@@ -18,3 +18,7 @@ verify_jwt = false
 
 [functions.newsletter-signup]
 verify_jwt = false
+
+# Paysera server callback has no Supabase JWT
+[functions.paysera-callback]
+verify_jwt = false

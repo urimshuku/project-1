@@ -87,7 +87,13 @@ Deno.serve(async (req: Request) => {
     // Unique order reference for this donation (used in callback to match payment)
     const normalizedEmail = String(email).trim().toLowerCase();
     const orderId = crypto.randomUUID();
-    const callbackUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/paysera-callback`;
+    // Paysera requires the callback to be on a domain verified in the project.
+    // PAYSERA_CALLBACK_URL should point to the proxy on our own domain
+    // (e.g. https://payments.studiospace.community/paysera-callback), which
+    // forwards to this project's paysera-callback function.
+    const callbackUrl =
+      (Deno.env.get("PAYSERA_CALLBACK_URL") ?? "").trim() ||
+      `${supabaseUrl.replace(/\/$/, "")}/functions/v1/paysera-callback`;
     const amountCents = Math.round(Number(amount) * 100);
     const version = "1.6";
     const test = Deno.env.get("PAYSERA_TEST") === "true" ? "1" : "0";

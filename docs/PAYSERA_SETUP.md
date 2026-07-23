@@ -46,6 +46,33 @@ supabase functions deploy paysera-callback
 
 Then set the secrets (see above). The callback URL is your Supabase project URL + `/functions/v1/paysera-callback`; ensure it is reachable by Paysera (no auth required for the callback).
 
+Deploy `paysera-callback` with JWT verification off (`verify_jwt = false` in `supabase/config.toml`, or `supabase functions deploy paysera-callback --no-verify-jwt`), because Paysera’s server callback does not send a Supabase JWT.
+
+---
+
+## Fix error 0x13 (URL address mismatch)
+
+Paysera error **0x13** means `accepturl`, `cancelurl`, `callbackurl`, or the payment referer does not match domains confirmed on the project. **Every domain must be ownership-verified (meta tag / file); Paysera will not whitelist third-party hosts like `*.supabase.co`** (confirmed by Paysera tech support, project 256874).
+
+Because GitHub Pages is static and cannot receive server callbacks, the callback goes through a small proxy on a subdomain we own — see `paysera-proxy/README.md`.
+
+Domains to confirm in Paysera → **Projects and Activities → My projects → Project settings**:
+
+| Purpose | Domain / URL to confirm |
+|---------|-------------------------|
+| Live site (accept/cancel + referer) | `https://www.studiospace.community` |
+| Callback proxy | `https://payments.studiospace.community` |
+
+Exact URLs this app sends:
+
+- `accepturl`: `https://www.studiospace.community/success?paysera=1`
+- `cancelurl`: `https://www.studiospace.community/cancel`
+- `callbackurl`: `https://payments.studiospace.community/paysera-callback` (set via Edge secret `PAYSERA_CALLBACK_URL`; falls back to the Supabase URL if unset, which Paysera rejects)
+
+Also enable **Allow test payments** in the project, and set Edge secret `PAYSERA_TEST=true` while Paysera reviews. After go-live, set `PAYSERA_TEST=false`.
+
+Do **not** use Paysera’s donation-button HTML generator for this site; checkout is already custom (`PaymentGateway` → `paysera-pay-url`).
+
 ---
 
 ## Callback verification
