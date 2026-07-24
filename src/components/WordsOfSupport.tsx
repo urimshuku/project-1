@@ -15,7 +15,7 @@ const FALLBACK_ENTRY: SupportEntry = {
   id: 'fallback-500',
   donor_name: 'Anonymous',
   is_anonymous: true,
-  words_of_support: 'I feel so happy to help you guys!',
+  words_of_support: "Seeing how much dedication goes into this place, I'm glad to contribute!",
   created_at: '',
 };
 
