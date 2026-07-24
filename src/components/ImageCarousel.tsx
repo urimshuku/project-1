@@ -6,7 +6,7 @@ const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 export function ImageCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const images = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+  const images = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
     id: n,
     src: `${base}/images/donations-renovation/studio-space-renovation-${n}.png`,
     alt: `Studio Space renovation ${n}`,
