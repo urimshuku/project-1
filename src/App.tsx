@@ -39,70 +39,29 @@ type Page =
   | 'cookie-policy'
   | 'terms-of-service';
 
+// Old cause categories that are archived and must never be shown,
+// even if the database has not been migrated yet.
+const ARCHIVED_CATEGORY_NAMES = new Set([
+  'Workshop Tables',
+  'Insulation',
+  'Garden',
+  'Kitchen',
+  'Essentials',
+  'A/C',
+]);
+
+const RENOVATIONS_TARGET = 14300;
+
 // Default categories when Supabase returns none (used on first load or if DB is empty)
 const DEFAULT_CATEGORIES: Category[] = [
   {
-    id: 'default-general',
-    name: 'General Donations',
-    description: 'General support for our space.',
-    target_amount: 0,
-    current_amount: 0,
-    sort_order: 0,
-    has_progress_bar: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'default-workshop-tables',
-    name: 'Workshop Tables',
-    description: 'Tables for workshops and collaborative work in the studio.',
-    target_amount: 500,
+    id: 'default-renovations',
+    name: 'Renovations',
+    description:
+      'Structural renovations to keep Studio Space open: repairing the roof, replacing windows, insulating the walls, restoring the unused 8 m² area, and rebuilding the bathroom.',
+    target_amount: RENOVATIONS_TARGET,
     current_amount: 500,
-    sort_order: 1,
-    has_progress_bar: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'default-insulation',
-    name: 'Insulation',
-    description: 'Help us insulate the studio to stay warm in winter and cool in summer.',
-    target_amount: 2500,
-    current_amount: 0,
-    sort_order: 2,
-    has_progress_bar: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'default-garden',
-    name: 'Garden',
-    description: 'Outdoor garden area for breaks and small events.',
-    target_amount: 500,
-    current_amount: 0,
-    sort_order: 3,
-    has_progress_bar: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'default-kitchen',
-    name: 'Kitchen',
-    description: 'Kitchen upgrade so we can host workshops and community meals.',
-    target_amount: 5000,
-    current_amount: 0,
-    sort_order: 4,
-    has_progress_bar: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'default-essentials',
-    name: 'Essentials',
-    description: 'Essential comforts for the space: heating, cooling, and basic amenities so everyone can work in comfort year-round.',
-    target_amount: 2000,
-    current_amount: 0,
-    sort_order: 5,
+    sort_order: 0,
     has_progress_bar: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -179,7 +138,7 @@ function skipInitialLoadingForStaticPages(): boolean {
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
-  const [selectedTab, setSelectedTab] = useState('General Donations');
+  const [selectedTab, setSelectedTab] = useState('Renovations');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(() => !skipInitialLoadingForStaticPages());
@@ -375,53 +334,41 @@ function App() {
     setSelectedCategory(null);
   };
 
-  // Use DB categories when present, but always merge in any default category that's missing (e.g. Workshop Tables)
+  // Hide archived categories, and map the legacy "General Donations" name to "Renovations"
+  // in case the database migration hasn't been applied yet.
+  const visibleDbCategories = categories
+    .filter((c) => !c.archived && !ARCHIVED_CATEGORY_NAMES.has(c.name))
+    .map((c) =>
+      c.name === 'General Donations'
+        ? { ...c, name: 'Renovations', target_amount: RENOVATIONS_TARGET, has_progress_bar: true }
+        : c
+    );
+  // Use DB categories when present, but always merge in any default category that's missing
   const rawCategories =
-    categories.length > 0
+    visibleDbCategories.length > 0
       ? (() => {
-          const byName = new Map(categories.map((c) => [c.name, c]));
+          const byName = new Map(visibleDbCategories.map((c) => [c.name, c]));
           for (const def of DEFAULT_CATEGORIES) {
             if (!byName.has(def.name)) byName.set(def.name, def);
           }
-          return Array.from(byName.values()).sort((a, b) => {
-            if (a.name === 'General Donations') return -1;
-            if (b.name === 'General Donations') return 1;
-            if (a.name === 'Workshop Tables') return -1;
-            if (b.name === 'Workshop Tables') return 1;
-            return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-          });
+          return Array.from(byName.values());
         })()
       : DEFAULT_CATEGORIES;
-  // Always show "Essentials" in UI (in case DB still has "A/C"); use DB amounts, don't hardcode
-  const mapped = rawCategories.map((c) =>
-    c.name === 'A/C'
-      ? {
-          ...c,
-          name: 'Essentials',
-          description:
-            'Essential comforts for the space: heating, cooling, and basic amenities so everyone can work in comfort year-round.',
-          target_amount: 2000,
-          current_amount: c.current_amount,
-        }
-      : c
-  );
-  // Remove duplicate names (e.g. both A/C and Essentials showing as Essentials) – keep first
+  // Remove duplicate names – keep first
   const seenNames = new Set<string>();
-  const displayCategories = mapped
+  const displayCategories = rawCategories
     .filter((c) => {
       if (seenNames.has(c.name)) return false;
       seenNames.add(c.name);
       return true;
     })
     .sort((a, b) => {
-      if (a.name === 'General Donations') return -1;
-      if (b.name === 'General Donations') return 1;
-      if (a.name === 'Workshop Tables') return -1;
-      if (b.name === 'Workshop Tables') return 1;
+      if (a.name === 'Renovations') return -1;
+      if (b.name === 'Renovations') return 1;
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
-  const generalCategory = displayCategories.find((c) => c.name === 'General Donations');
-  const specificCategories = displayCategories.filter((c) => c.name !== 'General Donations');
+  const generalCategory = displayCategories.find((c) => c.name === 'Renovations');
+  const specificCategories = displayCategories.filter((c) => c.name !== 'Renovations');
 
   const handleDonateNow = () => {
     if (!generalCategory) return;
@@ -547,37 +494,38 @@ function App() {
           </ScrollReveal>
           <ScrollReveal className="space-y-3 sm:space-y-4 max-w-3xl mx-auto">
             <p className="text-base sm:text-lg text-gray-600">
-              Studio Space has, until now, been held and run by volunteers. Most gatherings have been offered freely,
-              sustained by care, time, and a shared wish to keep the space open.
+              Since the beginning, Studio Space has hosted more than 62 community events, all offered free of charge and
+              made possible entirely through volunteer work, with no external funding.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              Over time, the space has begun to require more than what we can maintain on our own.
+              To continue offering this space to the community, we now need to undertake essential structural renovations
+              that go beyond what volunteers can do on their own.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              As you may see in the photos, part of the roof is damaged, causing water leakage that has affected the
-              walls and ceiling. To properly care for the space, we need to repair the roof, replace windows where
-              needed, and insulate the walls to prevent further damage.
+              As you can see in the photos, part of the roof has been damaged, causing water leaks that have affected the
+              walls and ceiling. To prevent further deterioration, we need to repair the roof, replace several windows,
+              and insulate the walls.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              There is also an additional area of around 8m² that is currently not in use. This space requires more
-              extensive work, including insulation, proper water drainage, and basic restoration so it can become part
-              of the studio.
+              There is also an unused 8 m² area that requires extensive work, including insulation, proper drainage, and
+              full restoration before it can become part of the studio.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              Some repairs are also needed in the bathroom to ensure the space remains functional and safe.
+              The bathroom also requires a complete renovation. Due to ongoing water leaks, moisture and mold have
+              developed over time, issues that are also visible in the photos. Restoring it will require rebuilding the
+              space and addressing the underlying causes of the damage.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              These are not surface improvements, but necessary structural repairs so the space can continue to exist
-              and welcome people.
+              These are not cosmetic improvements. They are major structural renovations that require professional
+              contractors, specialized work, and construction materials.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              Your support helps us take care of what holds all of this.
+              To complete these renovations, Studio Space is raising <strong>€14,300</strong>.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              To complete the needed renovations, Studio Space is raising <strong>14,300 €</strong>.
-            </p>
-            <p className="text-base sm:text-lg text-gray-600">
-              If this space resonates with you, you are warmly invited to support it.
+              If this space has been meaningful to you (or if you believe in creating places where people can gather,
+              learn, create, and connect) we warmly invite you to support this campaign. Every contribution, no matter
+              its size, helps ensure that Studio Space can continue serving the community for years to come.
             </p>
           </ScrollReveal>
         </div>
@@ -707,9 +655,31 @@ function App() {
                 <p className="text-gray-600 text-sm sm:text-base">{generalCategory.description}</p>
               </div>
               <div className="mt-3 sm:mt-4">
-                <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Raised</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
-                  €{generalCategory.current_amount.toLocaleString()}
+                <div className="flex justify-between items-baseline mb-2 sm:mb-4">
+                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+                    €{generalCategory.current_amount.toLocaleString()}
+                  </span>
+                  <span className="text-sm sm:text-base md:text-lg text-gray-500">
+                    of €{generalCategory.target_amount.toLocaleString()} goal
+                  </span>
+                </div>
+                <div className="relative w-full h-2.5 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="absolute top-0 left-0 h-full transition-all duration-700 ease-out rounded-full"
+                    style={{
+                      width: `${Math.min(
+                        (generalCategory.current_amount / Math.max(generalCategory.target_amount, 1)) * 100,
+                        100
+                      )}%`,
+                      backgroundColor: '#c95b2d',
+                    }}
+                  />
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">
+                  {`${Math.min(
+                    (generalCategory.current_amount / Math.max(generalCategory.target_amount, 1)) * 100,
+                    100
+                  ).toFixed(1)}% funded`}
                 </p>
               </div>
               <div className="flex items-stretch gap-2 mt-5 sm:mt-6">

@@ -10,6 +10,7 @@ export interface Database {
           current_amount: number;
           sort_order: number;
           has_progress_bar: boolean;
+          archived?: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -21,6 +22,7 @@ export interface Database {
           current_amount?: number;
           sort_order?: number;
           has_progress_bar?: boolean;
+          archived?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -32,6 +34,7 @@ export interface Database {
           current_amount?: number;
           sort_order?: number;
           has_progress_bar?: boolean;
+          archived?: boolean;
           created_at?: string;
           updated_at?: string;
         };
