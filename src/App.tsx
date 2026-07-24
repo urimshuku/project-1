@@ -574,7 +574,7 @@ function App() {
               Your support helps us take care of what holds all of this.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
-              To complete the needed renovations, Studio Space is raising <strong>14,327 €</strong>.
+              To complete the needed renovations, Studio Space is raising <strong>14,300 €</strong>.
             </p>
             <p className="text-base sm:text-lg text-gray-600">
               If this space resonates with you, you are warmly invited to support it.
